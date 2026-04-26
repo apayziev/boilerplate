@@ -30,4 +30,4 @@ cd backend && uv --project backend run alembic upgrade head
 echo "👤 Creating first superuser..."
 cd backend && uv --project backend run python -m app.commands.create_first_superuser
 
-echo "✅ Setup complete! You can now run the app with 'make run' or 'docker-compose up'."
+echo "✅ Setup complete! You can now run the app with 'make run-backend' (local dev) or 'make docker-local' (containers)."
