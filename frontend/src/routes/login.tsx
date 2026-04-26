@@ -6,6 +6,7 @@ import { z } from "zod"
 import type { Body_login_access_token as AccessToken } from "@/client"
 import { UsersService } from "@/client"
 import { AuthLayout } from "@/components/Common/AuthLayout"
+import { passwordSchema } from "@/lib/validation"
 import {
   Form,
   FormControl,
@@ -21,10 +22,7 @@ import useAuth from "@/hooks/useAuth"
 
 const formSchema = z.object({
   username: z.string().min(1, { message: "Username or email is required" }),
-  password: z
-    .string()
-    .min(1, { message: "Password is required" })
-    .min(8, { message: "Password must be at least 8 characters" }),
+  password: passwordSchema,
 }) satisfies z.ZodType<AccessToken>
 
 type FormData = z.infer<typeof formSchema>
