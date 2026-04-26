@@ -1,0 +1,32 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-toml
+      - id: check-yaml
+        args:
+          - --unsafe
+
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: backend/.venv/bin/python -m ruff check
+        language: system
+        types: [python]
+
+      - id: ruff-format
+        name: ruff format
+        entry: backend/.venv/bin/python -m ruff format --check
+        language: system
+        types: [python]
+
+      - id: mypy
+        name: mypy
+        entry: backend/.venv/bin/python -m mypy backend/app
+        language: system
+        types: [python]
+        pass_filenames: false
