@@ -29,3 +29,11 @@ async def test_request_id_header_present(client: AsyncClient):
 async def test_request_id_echoed_when_caller_provides_one(client: AsyncClient):
     response = await client.get("/api/v1/health", headers={"X-Request-ID": "trace-abc-123"})
     assert response.headers["X-Request-ID"] == "trace-abc-123"
+
+
+@pytest.mark.asyncio
+async def test_metrics_endpoint(client: AsyncClient):
+    response = await client.get("/metrics")
+    assert response.status_code == 200
+    body = response.text
+    assert "python_info" in body or "process_cpu_seconds_total" in body

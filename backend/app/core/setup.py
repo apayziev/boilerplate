@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
+from prometheus_fastapi_instrumentator import Instrumentator
 from sqlalchemy import text
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
@@ -212,5 +213,14 @@ def create_application(
     # Trust X-Forwarded-* from the reverse proxy (Caddy in prod). Without this, `request.client.host` is the
     # proxy IP for every request, which would collapse all users into a single rate-limit bucket.
     application.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")  # type: ignore[arg-type]
+    _install_metrics(application)
     _install_docs_router(application, settings)
     return application
+
+
+def _install_metrics(application: FastAPI) -> None:
+    """Expose Prometheus metrics at `/metrics`. In production, restrict access at the proxy layer
+    (Caddy → only allow scrapes from the metrics network) — this endpoint is unauthenticated."""
+    Instrumentator(
+        excluded_handlers=["/metrics", "/api/v1/health", "/api/v1/ready"],
+    ).instrument(application).expose(application, include_in_schema=False, should_gzip=True)
