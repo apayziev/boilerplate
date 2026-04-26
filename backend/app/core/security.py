@@ -71,13 +71,18 @@ def _is_secure_environment() -> bool:
 
 
 def set_auth_cookie(response: Response, key: str, value: str, max_age: int) -> None:
-    """Set an httpOnly auth cookie. `secure` flag is auto-disabled in local env so cookies work over plain HTTP."""
+    """Set an httpOnly auth cookie.
+
+    - ``secure`` is auto-disabled in local env so cookies work over plain HTTP.
+    - ``samesite="strict"`` blocks the cookie from being sent on cross-site requests, which neutralises the
+      classic CSRF vector for state-changing endpoints.
+    """
     response.set_cookie(
         key=key,
         value=value,
         httponly=True,
         secure=_is_secure_environment(),
-        samesite="lax",
+        samesite="strict",
         max_age=max_age,
     )
 

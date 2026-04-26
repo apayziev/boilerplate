@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.openapi.utils import get_openapi
 from sqlalchemy import text
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from app.api.deps import get_current_superuser
 from app.core.middleware import RequestLoggingMiddleware
@@ -208,5 +209,8 @@ def create_application(
         allow_methods=settings.CORS_METHODS,
         allow_headers=settings.CORS_HEADERS,
     )
+    # Trust X-Forwarded-* from the reverse proxy (Caddy in prod). Without this, `request.client.host` is the
+    # proxy IP for every request, which would collapse all users into a single rate-limit bucket.
+    application.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")  # type: ignore[arg-type]
     _install_docs_router(application, settings)
     return application

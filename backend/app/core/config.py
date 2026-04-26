@@ -84,4 +84,23 @@ class Settings(BaseSettings):
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}"
 
 
+_DEFAULT_SECRET_KEY = "secret-key-change-in-production"  # sentinel, not a real secret
+
+
+def _validate_production_settings(s: Settings) -> None:
+    """Refuse to boot with insecure defaults in production. Caught at startup, not at first request."""
+    if s.ENVIRONMENT != EnvironmentOption.PRODUCTION:
+        return
+    problems: list[str] = []
+    if s.SECRET_KEY.get_secret_value() == _DEFAULT_SECRET_KEY:
+        problems.append("SECRET_KEY is the default placeholder")
+    if s.ADMIN_PASSWORD == "!Ch4ng3Th1sP4ssW0rd!":
+        problems.append("ADMIN_PASSWORD is the default placeholder")
+    if s.POSTGRES_PASSWORD == "postgres":
+        problems.append("POSTGRES_PASSWORD is the default placeholder")
+    if problems:
+        raise RuntimeError("Refusing to boot in production with insecure defaults: " + "; ".join(problems))
+
+
 settings = Settings()
+_validate_production_settings(settings)
