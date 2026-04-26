@@ -17,8 +17,8 @@ async def test_password_hashing():
 async def test_token_creation_and_verify(db, mock_redis):
     # verify_token(token, type, db)
 
-    data = {"sub": "test@example.com", "token_type": "access"}
-    token = await create_access_token(data=data)
+    data = {"sub": "test@example.com"}
+    token = create_access_token(data=data)
 
     verified_data = await verify_token(token, TokenType.ACCESS, db)
     assert verified_data is not None

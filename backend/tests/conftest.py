@@ -104,7 +104,7 @@ async def superuser_token_headers(db: AsyncSession) -> dict[str, str]:
     from tests.helpers.generators import create_user
 
     user = await create_user(db, is_superuser=True)
-    access_token = await create_access_token(data={"sub": user.email, "token_type": "access"})
+    access_token = create_access_token(data={"sub": user.email})
     return {"Authorization": f"Bearer {access_token}"}
 
 
@@ -113,5 +113,5 @@ async def normal_user_token_headers(db: AsyncSession) -> dict[str, str]:
     from tests.helpers.generators import create_user
 
     user = await create_user(db, is_superuser=False)
-    access_token = await create_access_token(data={"sub": user.email, "token_type": "access"})
+    access_token = create_access_token(data={"sub": user.email})
     return {"Authorization": f"Bearer {access_token}"}

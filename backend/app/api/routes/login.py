@@ -1,24 +1,39 @@
-from datetime import timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.core.db import async_get_db
 from app.core.exceptions import UnauthorizedException
 from app.core.security import (
+    ACCESS_COOKIE_NAME,
     ACCESS_TOKEN_EXPIRE_MINUTES,
+    REFRESH_COOKIE_NAME,
+    REFRESH_TOKEN_EXPIRE_DAYS,
     TokenType,
     create_access_token,
     create_refresh_token,
+    set_auth_cookie,
     verify_token,
 )
 from app.crud import crud_users
 from app.schemas.auth import Token
 
 router = APIRouter(prefix="/login", tags=["login"])
+
+ACCESS_MAX_AGE = ACCESS_TOKEN_EXPIRE_MINUTES * 60
+REFRESH_MAX_AGE = REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
+
+
+def _issue_token_pair(response: Response, username: str, token_version: int) -> str:
+    """Generate access+refresh tokens and set both as httpOnly cookies. Returns the access token."""
+    payload = {"sub": username, "token_version": token_version}
+    access_token = create_access_token(data=payload)
+    refresh_token = create_refresh_token(data=payload)
+    set_auth_cookie(response, ACCESS_COOKIE_NAME, access_token, ACCESS_MAX_AGE)
+    set_auth_cookie(response, REFRESH_COOKIE_NAME, refresh_token, REFRESH_MAX_AGE)
+    return access_token
 
 
 @router.post("/access-token", response_model=Token, operation_id="login_access_token")
@@ -33,29 +48,17 @@ async def login_for_access_token(
     if not user.is_active:
         raise UnauthorizedException("Inactive user")
 
-    token_payload = {"sub": user.username, "token_version": user.token_version}
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = await create_access_token(data=token_payload, expires_delta=access_token_expires)
-
-    refresh_token = await create_refresh_token(data=token_payload)
-    access_max_age = ACCESS_TOKEN_EXPIRE_MINUTES * 60
-    refresh_max_age = settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
-
-    response.set_cookie(
-        key="access_token", value=access_token, httponly=True, secure=True, samesite="lax", max_age=access_max_age
-    )
-    response.set_cookie(
-        key="refresh_token", value=refresh_token, httponly=True, secure=True, samesite="lax", max_age=refresh_max_age
-    )
-
+    access_token = _issue_token_pair(response, user.username, user.token_version)
     return {"access_token": access_token, "token_type": "bearer"}
 
 
 @router.post("/refresh", operation_id="refresh_access_token")
 async def refresh_access_token(
-    request: Request, response: Response, db: AsyncSession = Depends(async_get_db)
+    request: Request,
+    response: Response,
+    db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> dict[str, str]:
-    refresh_token = request.cookies.get("refresh_token")
+    refresh_token = request.cookies.get(REFRESH_COOKIE_NAME)
     if not refresh_token:
         raise UnauthorizedException("Refresh token missing.")
 
@@ -63,22 +66,10 @@ async def refresh_access_token(
     if not token_data:
         raise UnauthorizedException("Invalid refresh token.")
 
-    # Look up user to verify token_version hasn't been incremented (e.g., after logout)
-    if "@" in token_data.username_or_email:
-        user = await crud_users.get_by_email(db=db, email=token_data.username_or_email, is_deleted=False)
-    else:
-        user = await crud_users.get_by_username(db=db, username=token_data.username_or_email, is_deleted=False)
-
+    user = await crud_users.get_by_login(db=db, identifier=token_data.username_or_email)
     if not user or user.token_version != token_data.token_version:
         raise UnauthorizedException("Token has been revoked.")
 
-    new_access_token = await create_access_token(data={"sub": user.username, "token_version": user.token_version})
-    response.set_cookie(
-        key="access_token",
-        value=new_access_token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-    )
-    return {"access_token": new_access_token, "token_type": "bearer"}
+    # Rotate both tokens — limits the reuse window if a refresh token is compromised.
+    access_token = _issue_token_pair(response, user.username, user.token_version)
+    return {"access_token": access_token, "token_type": "bearer"}

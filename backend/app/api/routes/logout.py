@@ -4,6 +4,7 @@ from fastapi import APIRouter, Cookie, Response
 
 from app.api.deps import CurrentUser, SessionDep
 from app.core.exceptions import UnauthorizedException
+from app.core.security import REFRESH_COOKIE_NAME, clear_auth_cookies
 from app.crud import crud_users
 
 router = APIRouter(tags=["login"])
@@ -14,15 +15,12 @@ async def logout(
     response: Response,
     db: SessionDep,
     current_user: CurrentUser,
-    refresh_token: Annotated[str | None, Cookie(alias="refresh_token")] = None,
+    refresh_token: Annotated[str | None, Cookie(alias=REFRESH_COOKIE_NAME)] = None,
 ) -> dict[str, str]:
-    """Logout user and invalidate all outstanding tokens."""
+    """Log the user out by bumping `token_version`, which invalidates every outstanding access/refresh token."""
     if not refresh_token:
         raise UnauthorizedException("Refresh token not found")
 
-    # Incrementing token_version makes all currently issued tokens invalid
     await crud_users.increment_token_version(db=db, user=current_user)
-    response.delete_cookie(key="access_token")
-    response.delete_cookie(key="refresh_token")
-
+    clear_auth_cookies(response)
     return {"message": "Logged out successfully"}
