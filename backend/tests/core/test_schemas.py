@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from app.schemas.base import PersistentDeletion, TimestampSchema
+from app.schemas.base import TimestampSchema
 
 
 def test_timestamp_schema_defaults():
@@ -15,17 +15,3 @@ def test_timestamp_schema_serialization():
     data = schema.model_dump(mode="json")
     assert data["created_at"] == "2023-01-01T12:00:00"
     assert data["updated_at"] == "2023-01-01T12:00:00"
-
-
-def test_persistent_deletion_defaults():
-    schema = PersistentDeletion()
-    assert schema.is_deleted is False
-    assert schema.deleted_at is None
-
-
-def test_persistent_deletion_serialization():
-    dt = datetime(2023, 1, 1, 12, 0, 0)
-    schema = PersistentDeletion(deleted_at=dt, is_deleted=True)
-    data = schema.model_dump(mode="json")
-    assert data["deleted_at"] == "2023-01-01T12:00:00"
-    assert data["is_deleted"] is True

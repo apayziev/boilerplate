@@ -106,13 +106,14 @@ async def close_redis_rate_limit_pool() -> None:
 
 
 # -------------- thread pool --------------
-async def set_threadpool_tokens(number_of_tokens: int | None = None) -> None:
-    """Raise the AnyIO thread-pool size so blocking calls (sync libs, file IO) don't queue behind each other.
+def set_threadpool_tokens(tokens: int | None = None) -> None:
+    """Raise AnyIO's thread-pool size so blocking calls don't queue behind each other.
 
     Reads `THREADPOOL_TOKENS` from settings unless a value is passed explicitly.
     """
-    tokens = number_of_tokens if number_of_tokens is not None else settings.THREADPOOL_TOKENS
-    anyio.to_thread.current_default_thread_limiter().total_tokens = tokens
+    anyio.to_thread.current_default_thread_limiter().total_tokens = (
+        tokens if tokens is not None else settings.THREADPOOL_TOKENS
+    )
 
 
 # -------------- application factory --------------
@@ -121,7 +122,7 @@ def lifespan_factory(settings: Settings) -> Callable[[FastAPI], _AsyncGeneratorC
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator:
-        await set_threadpool_tokens()
+        set_threadpool_tokens()
         try:
             if settings.ENABLE_REDIS_QUEUE:
                 await create_redis_queue_pool()

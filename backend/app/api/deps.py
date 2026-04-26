@@ -1,17 +1,14 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import async_get_db
 from app.core.exceptions import ForbiddenException, UnauthorizedException
-from app.core.logger import logging
 from app.core.security import ACCESS_COOKIE_NAME, TokenType, verify_token
 from app.crud import crud_users
 from app.models.user import User
-
-logger = logging.getLogger(__name__)
 
 SessionDep = Annotated[AsyncSession, Depends(async_get_db)]
 
@@ -59,18 +56,3 @@ async def get_current_superuser(current_user: CurrentUser) -> User:
 
 
 SuperUserDep = Annotated[User, Depends(get_current_superuser)]
-
-
-async def get_optional_user(request: Request, db: SessionDep) -> User | None:
-    auth_header = request.headers.get("Authorization", "")
-    bearer = auth_header[7:] if auth_header.startswith("Bearer ") else None
-    token = _extract_token(request, bearer)
-    if not token:
-        return None
-    try:
-        return await _resolve_user(db, token)
-    except HTTPException:
-        return None
-    except Exception as exc:
-        logger.error("Unexpected error in get_optional_user: %s", exc)
-        return None
