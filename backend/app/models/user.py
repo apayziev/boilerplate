@@ -23,5 +23,4 @@ class User(BaseModel):
     is_superuser: Mapped[bool] = mapped_column(default=False, kw_only=True)
     token_version: Mapped[int] = mapped_column(default=0, server_default="0", kw_only=True)
 
-    # Relationships
     items: Mapped[list["Item"]] = relationship("Item", back_populates="owner", cascade="all, delete-orphan", init=False)  # type: ignore

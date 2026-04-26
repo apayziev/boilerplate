@@ -10,7 +10,6 @@ from app.tasks import all_tasks
 
 from .config import settings
 
-# Set up uvloop for better performance
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
