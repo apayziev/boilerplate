@@ -1,7 +1,6 @@
 from typing import Annotated
 
 from pydantic import (
-    AliasChoices,
     BaseModel,
     BeforeValidator,
     ConfigDict,
@@ -26,14 +25,7 @@ def validate_password_strength(v: str) -> str:
     return v
 
 
-_NAME_FIELD = Field(
-    min_length=2,
-    max_length=30,
-    examples=["User Userson"],
-    validation_alias=AliasChoices("name", "full_name"),
-    serialization_alias="full_name",
-    default=None,
-)
+_NAME_FIELD = Field(min_length=2, max_length=30, examples=["User Userson"], default=None)
 _USERNAME_FIELD = Field(min_length=2, max_length=20, pattern=r"^[a-z0-9]+$", examples=["userson"], default=None)
 _EMAIL_FIELD = Field(examples=["user.userson@example.com"])
 _PROFILE_IMAGE_FIELD = Field(
@@ -44,8 +36,6 @@ _PROFILE_IMAGE_FIELD = Field(
 
 
 class UserBase(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-
     name: Annotated[str | None, _NAME_FIELD]
     username: Annotated[str | None, _USERNAME_FIELD]
     email: Annotated[EmailStr, _EMAIL_FIELD]
@@ -54,10 +44,10 @@ class UserBase(BaseModel):
 class UserRead(BaseModel):
     """Public-facing user representation. Used for every read response."""
 
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+    model_config = ConfigDict(from_attributes=True)
 
     id: Annotated[str, BeforeValidator(lambda v: str(v)), Field(examples=["1"])]
-    full_name: Annotated[str, Field(min_length=2, max_length=30, examples=["User Userson"], validation_alias="name")]
+    name: Annotated[str | None, _NAME_FIELD]
     username: Annotated[str, Field(min_length=2, max_length=20, pattern=r"^[a-z0-9]+$", examples=["userson"])]
     email: Annotated[EmailStr, _EMAIL_FIELD]
     profile_image_url: str
@@ -68,7 +58,7 @@ class UserRead(BaseModel):
 class UserCreate(UserBase):
     """Body for `POST /users` — superuser-only endpoint, so privilege flags live here."""
 
-    model_config = ConfigDict(extra="ignore", populate_by_name=True)
+    model_config = ConfigDict(extra="ignore")
 
     password: Annotated[str, Field(examples=["Str1ngst!"])]
     is_superuser: bool = False
@@ -81,13 +71,13 @@ class UserCreate(UserBase):
 
 
 class UserUpdate(BaseModel):
-    """Body for `PATCH /users/me` — self-update only. Privilege flags and password are intentionally absent.
+    """Body for `PATCH /users/me` — self-update only.
 
     Privilege flags can only be changed via `UserAdminUpdate` on the admin endpoint.
     Password changes go through `PATCH /users/me/password` so the current password is verified.
     """
 
-    model_config = ConfigDict(extra="ignore", populate_by_name=True)
+    model_config = ConfigDict(extra="ignore")
 
     name: Annotated[str | None, _NAME_FIELD]
     username: Annotated[str | None, _USERNAME_FIELD]

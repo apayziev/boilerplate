@@ -11,10 +11,10 @@ export type UserTableData = UserRead & {
 
 export const columns: ColumnDef<UserTableData>[] = [
   {
-    accessorKey: "full_name",
+    accessorKey: "name",
     header: "Full Name",
     cell: ({ row }) => {
-      const fullName = row.original.full_name
+      const fullName = row.original.name
       return (
         <div className="flex items-center gap-2">
           <span
