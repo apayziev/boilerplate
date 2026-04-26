@@ -41,7 +41,7 @@ const DeleteItem = ({ id, onSuccess }: DeleteItemProps) => {
       setIsOpen(false)
       onSuccess()
     },
-    onError: handleError.bind(showErrorToast),
+    onError: handleError(showErrorToast),
     onSettled: () => {
       queryClient.invalidateQueries()
     },

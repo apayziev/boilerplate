@@ -17,7 +17,7 @@ const useAuth = () => {
     onSuccess: () => {
       navigate({ to: "/" })
     },
-    onError: handleError.bind(showErrorToast),
+    onError: handleError(showErrorToast),
   })
 
   const logoutMutation = useMutation({

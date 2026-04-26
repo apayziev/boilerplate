@@ -41,7 +41,7 @@ const DeleteUser = ({ id, onSuccess }: DeleteUserProps) => {
       setIsOpen(false)
       onSuccess()
     },
-    onError: handleError.bind(showErrorToast),
+    onError: handleError(showErrorToast),
     onSettled: () => {
       queryClient.invalidateQueries()
     },

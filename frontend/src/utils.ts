@@ -13,13 +13,18 @@ function extractErrorMessage(err: ApiError): string {
   return errDetail || "Something went wrong."
 }
 
-export const handleError = function (
-  this: (msg: string) => void,
-  err: ApiError,
-) {
-  const errorMessage = extractErrorMessage(err)
-  this(errorMessage)
-}
+type ToastFn = (message: string) => void
+
+/**
+ * Build a TanStack Query `onError` handler that pipes the API error message into the given toast function.
+ *
+ * Usage: `onError: handleError(showErrorToast)`.
+ */
+export const handleError =
+  (showToast: ToastFn) =>
+  (err: ApiError): void => {
+    showToast(extractErrorMessage(err))
+  }
 
 export const getInitials = (name: string): string => {
   return name
