@@ -1,6 +1,6 @@
 import { Monitor, Moon, Sun } from "lucide-react"
+import { useTheme } from "next-themes"
 
-import { type Theme, useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -14,9 +14,10 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
+type ThemeChoice = "system" | "light" | "dark"
 type LucideIcon = React.FC<React.SVGProps<SVGSVGElement>>
 
-const ICON_MAP: Record<Theme, LucideIcon> = {
+const ICON_MAP: Record<ThemeChoice, LucideIcon> = {
   system: Monitor,
   light: Sun,
   dark: Moon,
@@ -25,7 +26,7 @@ const ICON_MAP: Record<Theme, LucideIcon> = {
 export const SidebarAppearance = () => {
   const { isMobile } = useSidebar()
   const { setTheme, theme } = useTheme()
-  const Icon = ICON_MAP[theme]
+  const Icon = ICON_MAP[(theme as ThemeChoice) ?? "system"]
 
   return (
     <SidebarMenuItem>
