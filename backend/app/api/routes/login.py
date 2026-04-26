@@ -58,9 +58,9 @@ async def login_for_access_token(
         db=db, username_or_phone=form_data.username, password=form_data.password
     )
     if not user:
-        raise UnauthorizedException("Wrong username, phone, or password.")
+        raise UnauthorizedException("Foydalanuvchi nomi, telefon yoki parol noto'g'ri.")
     if not user.is_active:
-        raise UnauthorizedException("Inactive user")
+        raise UnauthorizedException("Foydalanuvchi faol emas")
 
     access_token = _issue_token_pair(response, user.username, user.token_version)
     return {"access_token": access_token, "token_type": "bearer"}
@@ -74,15 +74,15 @@ async def refresh_access_token(
 ) -> dict[str, str]:
     refresh_token = request.cookies.get(REFRESH_COOKIE_NAME)
     if not refresh_token:
-        raise UnauthorizedException("Refresh token missing.")
+        raise UnauthorizedException("Yangilash tokeni topilmadi.")
 
     token_data = await verify_token(refresh_token, TokenType.REFRESH, db)
     if not token_data:
-        raise UnauthorizedException("Invalid refresh token.")
+        raise UnauthorizedException("Yaroqsiz yangilash tokeni.")
 
     user = await crud_users.get_by_login(db=db, identifier=token_data.username_or_phone)
     if not user or user.token_version != token_data.token_version:
-        raise UnauthorizedException("Token has been revoked.")
+        raise UnauthorizedException("Token bekor qilingan.")
 
     # Rotate both tokens — limits the reuse window if a refresh token is compromised.
     access_token = _issue_token_pair(response, user.username, user.token_version)

@@ -21,7 +21,7 @@ const DeleteUser = ({ id, onSuccess }: DeleteUserProps) => {
   const mutation = useMutation({
     mutationFn: () => UsersService.deleteUser({ userId: Number.parseInt(id) }),
     onSuccess: () => {
-      showSuccessToast("The user was deleted successfully")
+      showSuccessToast("Foydalanuvchi muvaffaqiyatli o'chirildi")
       setOpen(false)
       onSuccess()
     },
@@ -39,20 +39,20 @@ const DeleteUser = ({ id, onSuccess }: DeleteUserProps) => {
         onClick={() => setOpen(true)}
       >
         <Trash2 />
-        Delete User
+        Foydalanuvchini o'chirish
       </DropdownMenuItem>
       <ConfirmDialog
         open={open}
         onOpenChange={setOpen}
-        title="Delete User"
+        title="Foydalanuvchini o'chirish"
         description={
           <>
-            All items associated with this user will also be{" "}
-            <strong>permanently deleted.</strong> Are you sure? You will not be
-            able to undo this action.
+            Bu foydalanuvchiga tegishli barcha elementlar ham{" "}
+            <strong>butunlay o'chiriladi.</strong> Ishonchingiz komilmi? Bu
+            amalni qaytarib bo'lmaydi.
           </>
         }
-        confirmText="Delete"
+        confirmText="O'chirish"
         destructive
         loading={mutation.isPending}
         onConfirm={() => mutation.mutate()}

@@ -26,7 +26,7 @@ function CopyId({ id }: { id: number | string }) {
         ) : (
           <Copy className="size-3" />
         )}
-        <span className="sr-only">Copy ID</span>
+        <span className="sr-only">ID nusxa olish</span>
       </Button>
     </div>
   )
@@ -40,14 +40,14 @@ export const columns: ColumnDef<ItemPublic>[] = [
   },
   {
     accessorKey: "title",
-    header: "Title",
+    header: "Sarlavha",
     cell: ({ row }) => (
       <span className="font-medium">{row.original.title}</span>
     ),
   },
   {
     accessorKey: "description",
-    header: "Description",
+    header: "Tavsif",
     cell: ({ row }) => {
       const description = row.original.description
       return (
@@ -57,14 +57,14 @@ export const columns: ColumnDef<ItemPublic>[] = [
             !description && "italic",
           )}
         >
-          {description || "No description"}
+          {description || "Tavsif yo'q"}
         </span>
       )
     },
   },
   {
     id: "actions",
-    header: () => <span className="sr-only">Actions</span>,
+    header: () => <span className="sr-only">Amallar</span>,
     cell: ({ row }) => (
       <div className="flex justify-end">
         <ItemActionsMenu item={row.original} />

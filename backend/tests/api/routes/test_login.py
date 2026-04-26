@@ -25,7 +25,7 @@ async def test_incorrect_login(client: AsyncClient):
     login_data = {"username": "+998900099999", "password": "wrongpassword"}
     response = await client.post("/api/v1/login/access-token", data=login_data)
     assert response.status_code == 401
-    assert response.json()["detail"] == "Wrong username, phone, or password."
+    assert response.json()["detail"] == "Foydalanuvchi nomi, telefon yoki parol noto'g'ri."
 
 
 @pytest.mark.asyncio

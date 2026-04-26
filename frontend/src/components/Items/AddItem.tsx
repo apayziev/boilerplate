@@ -31,7 +31,7 @@ import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
 const formSchema = z.object({
-  title: z.string().min(1, { message: "Title is required" }),
+  title: z.string().min(1, { message: "Sarlavha majburiy" }),
   description: z.string().optional(),
 })
 
@@ -56,7 +56,7 @@ const AddItem = () => {
     mutationFn: (data: ItemCreate) =>
       ItemsService.createItem({ requestBody: data }),
     onSuccess: () => {
-      showSuccessToast("Item created successfully")
+      showSuccessToast("Element muvaffaqiyatli yaratildi")
       form.reset()
       setIsOpen(false)
     },
@@ -75,14 +75,14 @@ const AddItem = () => {
       <DialogTrigger asChild>
         <Button className="my-4">
           <Plus className="mr-2" />
-          Add Item
+          Element qo'shish
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add Item</DialogTitle>
+          <DialogTitle>Element qo'shish</DialogTitle>
           <DialogDescription>
-            Fill in the details to add a new item.
+            Yangi element yaratish uchun maydonlarni to'ldiring.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -94,11 +94,11 @@ const AddItem = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Title <span className="text-destructive">*</span>
+                      Sarlavha <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Title"
+                        placeholder="Sarlavha"
                         type="text"
                         {...field}
                         required
@@ -114,9 +114,9 @@ const AddItem = () => {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>Tavsif</FormLabel>
                     <FormControl>
-                      <Input placeholder="Description" type="text" {...field} />
+                      <Input placeholder="Tavsif" type="text" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -127,11 +127,11 @@ const AddItem = () => {
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="outline" disabled={mutation.isPending}>
-                  Cancel
+                  Bekor qilish
                 </Button>
               </DialogClose>
               <LoadingButton type="submit" loading={mutation.isPending}>
-                Save
+                Saqlash
               </LoadingButton>
             </DialogFooter>
           </form>

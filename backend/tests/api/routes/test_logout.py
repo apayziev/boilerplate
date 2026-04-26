@@ -16,7 +16,7 @@ async def test_logout(client: AsyncClient, db, normal_user_token_headers):
 
     response = await client.post("/api/v1/logout", headers=normal_user_token_headers)
     assert response.status_code == 200
-    assert response.json()["message"] == "Logged out successfully"
+    assert response.json()["message"] == "Tizimdan muvaffaqiyatli chiqildi"
     assert "refresh_token" not in response.cookies or response.cookies["refresh_token"] == ""
     # httpx client might handle delete cookie by removing it or setting it to empty.
     # Response usually sets Set-Cookie: refresh_token=""; expires=...

@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_layout/items")({
   head: () => ({
     meta: [
       {
-        title: "Items - FastAPI Cloud",
+        title: "Elementlar - FastAPI Cloud",
       },
     ],
   }),
@@ -29,8 +29,10 @@ function ItemsTableContent() {
         <div className="rounded-full bg-muted p-4 mb-4">
           <Search className="h-8 w-8 text-muted-foreground" />
         </div>
-        <h3 className="text-lg font-semibold">You don't have any items yet</h3>
-        <p className="text-muted-foreground">Add a new item to get started</p>
+        <h3 className="text-lg font-semibold">Sizda hali element yo'q</h3>
+        <p className="text-muted-foreground">
+          Boshlash uchun yangi element qo'shing
+        </p>
       </div>
     )
   }
@@ -51,8 +53,10 @@ function Items() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Items</h1>
-          <p className="text-muted-foreground">Create and manage your items</p>
+          <h1 className="text-2xl font-bold tracking-tight">Elementlar</h1>
+          <p className="text-muted-foreground">
+            Elementlarni yarating va boshqaring
+          </p>
         </div>
         <AddItem />
       </div>

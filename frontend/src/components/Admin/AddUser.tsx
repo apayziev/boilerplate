@@ -29,7 +29,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
-import { phoneSchema, optionalNameSchema, passwordSchema } from "@/lib/validation"
+import { optionalNameSchema, passwordSchema, phoneSchema } from "@/lib/validation"
 import { handleError } from "@/utils"
 
 const formSchema = z
@@ -39,12 +39,12 @@ const formSchema = z
     password: passwordSchema,
     confirm_password: z
       .string()
-      .min(1, { message: "Please confirm your password" }),
+      .min(1, { message: "Parolni tasdiqlang" }),
     is_superuser: z.boolean(),
     is_active: z.boolean(),
   })
   .refine((data) => data.password === data.confirm_password, {
-    message: "The passwords don't match",
+    message: "Parollar mos emas",
     path: ["confirm_password"],
   })
 
@@ -73,7 +73,7 @@ const AddUser = () => {
     mutationFn: (data: UserCreate) =>
       UsersService.createUser({ requestBody: data }),
     onSuccess: () => {
-      showSuccessToast("User created successfully")
+      showSuccessToast("Foydalanuvchi muvaffaqiyatli yaratildi")
       form.reset()
       setIsOpen(false)
     },
@@ -92,14 +92,14 @@ const AddUser = () => {
       <DialogTrigger asChild>
         <Button className="my-4">
           <Plus className="mr-2" />
-          Add User
+          Foydalanuvchi qo'shish
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add User</DialogTitle>
+          <DialogTitle>Foydalanuvchi qo'shish</DialogTitle>
           <DialogDescription>
-            Fill in the form below to add a new user to the system.
+            Yangi foydalanuvchi qo'shish uchun quyidagi maydonlarni to'ldiring.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -111,7 +111,7 @@ const AddUser = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Phone <span className="text-destructive">*</span>
+                      Telefon <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -131,9 +131,9 @@ const AddUser = () => {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Full Name</FormLabel>
+                    <FormLabel>To'liq ism</FormLabel>
                     <FormControl>
-                      <Input placeholder="Full name" type="text" {...field} />
+                      <Input placeholder="To'liq ism" type="text" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -146,11 +146,11 @@ const AddUser = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Set Password <span className="text-destructive">*</span>
+                      Parol o'rnatish <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Password"
+                        placeholder="Parol"
                         type="password"
                         {...field}
                         required
@@ -167,12 +167,12 @@ const AddUser = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Confirm Password{" "}
+                      Parolni tasdiqlash{" "}
                       <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Password"
+                        placeholder="Parol"
                         type="password"
                         {...field}
                         required
@@ -194,7 +194,7 @@ const AddUser = () => {
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <FormLabel className="font-normal">Is superuser?</FormLabel>
+                    <FormLabel className="font-normal">Admin?</FormLabel>
                   </FormItem>
                 )}
               />
@@ -210,7 +210,7 @@ const AddUser = () => {
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <FormLabel className="font-normal">Is active?</FormLabel>
+                    <FormLabel className="font-normal">Faol?</FormLabel>
                   </FormItem>
                 )}
               />
@@ -219,11 +219,11 @@ const AddUser = () => {
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="outline" disabled={mutation.isPending}>
-                  Cancel
+                  Bekor qilish
                 </Button>
               </DialogClose>
               <LoadingButton type="submit" loading={mutation.isPending}>
-                Save
+                Saqlash
               </LoadingButton>
             </DialogFooter>
           </form>

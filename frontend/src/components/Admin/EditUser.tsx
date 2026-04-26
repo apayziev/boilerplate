@@ -29,7 +29,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
-import { phoneSchema, optionalNameSchema, optionalPasswordSchema } from "@/lib/validation"
+import { optionalNameSchema, optionalPasswordSchema, phoneSchema } from "@/lib/validation"
 import { handleError } from "@/utils"
 
 const formSchema = z
@@ -42,7 +42,7 @@ const formSchema = z
     is_active: z.boolean().optional(),
   })
   .refine((data) => !data.password || data.password === data.confirm_password, {
-    message: "The passwords don't match",
+    message: "Parollar mos emas",
     path: ["confirm_password"],
   })
 
@@ -77,7 +77,7 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
         requestBody,
       }),
     onSuccess: () => {
-      showSuccessToast("User updated successfully")
+      showSuccessToast("Foydalanuvchi muvaffaqiyatli yangilandi")
       setIsOpen(false)
       onSuccess()
     },
@@ -107,15 +107,15 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
         onClick={() => setIsOpen(true)}
       >
         <Pencil />
-        Edit User
+        Foydalanuvchini tahrirlash
       </DropdownMenuItem>
       <DialogContent className="sm:max-w-md">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <DialogTitle>Edit User</DialogTitle>
+              <DialogTitle>Foydalanuvchini tahrirlash</DialogTitle>
               <DialogDescription>
-                Update the user details below.
+                Foydalanuvchi ma'lumotlarini quyida yangilang.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -125,7 +125,7 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Phone <span className="text-destructive">*</span>
+                      Telefon <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -145,9 +145,9 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Full Name</FormLabel>
+                    <FormLabel>To'liq ism</FormLabel>
                     <FormControl>
-                      <Input placeholder="Full name" type="text" {...field} />
+                      <Input placeholder="To'liq ism" type="text" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -159,10 +159,10 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Set Password</FormLabel>
+                    <FormLabel>Parol o'rnatish</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Password"
+                        placeholder="Parol"
                         type="password"
                         {...field}
                       />
@@ -177,10 +177,10 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
                 name="confirm_password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
+                    <FormLabel>Parolni tasdiqlash</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Password"
+                        placeholder="Parol"
                         type="password"
                         {...field}
                       />
@@ -201,7 +201,7 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <FormLabel className="font-normal">Is superuser?</FormLabel>
+                    <FormLabel className="font-normal">Admin?</FormLabel>
                   </FormItem>
                 )}
               />
@@ -217,7 +217,7 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <FormLabel className="font-normal">Is active?</FormLabel>
+                    <FormLabel className="font-normal">Faol?</FormLabel>
                   </FormItem>
                 )}
               />
@@ -226,11 +226,11 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="outline" disabled={mutation.isPending}>
-                  Cancel
+                  Bekor qilish
                 </Button>
               </DialogClose>
               <LoadingButton type="submit" loading={mutation.isPending}>
-                Save
+                Saqlash
               </LoadingButton>
             </DialogFooter>
           </form>

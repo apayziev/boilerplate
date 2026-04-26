@@ -15,9 +15,9 @@ async def _get_item_for_user(item_id: int, session: SessionDep, current_user: Cu
     """Fetch an item by ID and verify the caller owns it (or is a superuser). Raises 404/403 otherwise."""
     item = await crud_items.get(db=session, id=item_id)
     if item is None:
-        raise NotFoundException("Item not found")
+        raise NotFoundException("Element topilmadi")
     if not current_user.is_superuser and item.owner_id != current_user.id:
-        raise ForbiddenException("Not enough permissions")
+        raise ForbiddenException("Yetarli huquq yo'q")
     return item
 
 
@@ -67,4 +67,4 @@ async def update_item(
 async def delete_item(id: int, session: SessionDep, current_user: CurrentUser) -> Message:
     await _get_item_for_user(id, session, current_user)
     await crud_items.delete(db=session, id=id)
-    return Message(message="Item deleted successfully")
+    return Message(message="Element muvaffaqiyatli o'chirildi")

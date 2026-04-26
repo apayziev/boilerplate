@@ -21,7 +21,7 @@ const DeleteItem = ({ id, onSuccess }: DeleteItemProps) => {
   const mutation = useMutation({
     mutationFn: () => ItemsService.deleteItem({ id }),
     onSuccess: () => {
-      showSuccessToast("The item was deleted successfully")
+      showSuccessToast("Element muvaffaqiyatli o'chirildi")
       setOpen(false)
       onSuccess()
     },
@@ -39,14 +39,14 @@ const DeleteItem = ({ id, onSuccess }: DeleteItemProps) => {
         onClick={() => setOpen(true)}
       >
         <Trash2 />
-        Delete Item
+        Elementni o'chirish
       </DropdownMenuItem>
       <ConfirmDialog
         open={open}
         onOpenChange={setOpen}
-        title="Delete Item"
-        description="This item will be permanently deleted. Are you sure? You will not be able to undo this action."
-        confirmText="Delete"
+        title="Elementni o'chirish"
+        description="Bu element butunlay o'chiriladi. Ishonchingiz komilmi? Bu amalni qaytarib bo'lmaydi."
+        confirmText="O'chirish"
         destructive
         loading={mutation.isPending}
         onConfirm={() => mutation.mutate()}

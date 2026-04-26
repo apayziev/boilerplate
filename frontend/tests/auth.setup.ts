@@ -7,7 +7,7 @@ setup("authenticate", async ({ page }) => {
   await page.goto("/login")
   await page.getByTestId("phone-input").fill(firstSuperuser)
   await page.getByTestId("password-input").fill(firstSuperuserPassword)
-  await page.getByRole("button", { name: "Log In" }).click()
+  await page.getByRole("button", { name: "Kirish" }).click()
   await page.waitForURL("/")
   await page.context().storageState({ path: authFile })
 })

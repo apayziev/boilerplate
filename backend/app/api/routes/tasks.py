@@ -19,7 +19,7 @@ _TASK_RATE_LIMIT = RateLimit(
 
 def _require_queue() -> None:
     if queue.pool is None:
-        raise CustomException(status_code=503, detail="Queue is not available")
+        raise CustomException(status_code=503, detail="Navbat xizmati ishlamayapti")
 
 
 @router.post(
@@ -37,7 +37,7 @@ async def create_task(
     assert queue.pool is not None  # narrowed for type-checker
     job = await queue.pool.enqueue_job("sample_background_task", message)
     if job is None:
-        raise CustomException(status_code=500, detail="Failed to create task")
+        raise CustomException(status_code=500, detail="Vazifani yaratib bo'lmadi")
     return {"id": job.job_id}
 
 

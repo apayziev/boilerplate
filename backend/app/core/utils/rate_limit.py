@@ -57,4 +57,4 @@ class RateLimit:
         key = f"ratelimit:{ip}:{path}:{window_start}"
 
         if await rate_limiter.is_rate_limited(key, self.limit, self.period):
-            raise RateLimitException("Rate limit exceeded.")
+            raise RateLimitException("So'rovlar chegarasidan oshib ketdi.")

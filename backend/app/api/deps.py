@@ -38,11 +38,11 @@ async def get_current_user(
 ) -> User:
     token = _extract_token(request, bearer_token)
     if not token:
-        raise UnauthorizedException("User not authenticated.")
+        raise UnauthorizedException("Tizimga kirilmagan.")
 
     user = await _resolve_user(db, token)
     if user is None:
-        raise UnauthorizedException("User not authenticated.")
+        raise UnauthorizedException("Tizimga kirilmagan.")
     return user
 
 
@@ -51,7 +51,7 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 
 async def get_current_superuser(current_user: CurrentUser) -> User:
     if not current_user.is_superuser:
-        raise ForbiddenException("You do not have enough privileges.")
+        raise ForbiddenException("Sizda yetarli huquq yo'q.")
     return current_user
 
 

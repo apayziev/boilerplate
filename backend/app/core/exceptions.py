@@ -7,22 +7,22 @@ class CustomException(HTTPException):
 
 
 class BadRequestException(CustomException):
-    def __init__(self, detail: str = "Bad Request") -> None:
+    def __init__(self, detail: str = "Noto'g'ri so'rov") -> None:
         super().__init__(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
 
 
 class NotFoundException(CustomException):
-    def __init__(self, detail: str = "Not Found") -> None:
+    def __init__(self, detail: str = "Topilmadi") -> None:
         super().__init__(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
 
 
 class ForbiddenException(CustomException):
-    def __init__(self, detail: str = "Forbidden") -> None:
+    def __init__(self, detail: str = "Ruxsat berilmagan") -> None:
         super().__init__(status_code=status.HTTP_403_FORBIDDEN, detail=detail)
 
 
 class UnauthorizedException(CustomException):
-    def __init__(self, detail: str = "Unauthorized") -> None:
+    def __init__(self, detail: str = "Tizimga kirilmagan") -> None:
         super().__init__(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=detail,
@@ -31,15 +31,15 @@ class UnauthorizedException(CustomException):
 
 
 class UnprocessableEntityException(CustomException):
-    def __init__(self, detail: str = "Unprocessable Entity") -> None:
+    def __init__(self, detail: str = "Qayta ishlab bo'lmaydigan ma'lumot") -> None:
         super().__init__(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=detail)
 
 
 class DuplicateValueException(CustomException):
-    def __init__(self, detail: str = "Duplicate Value") -> None:
+    def __init__(self, detail: str = "Takroriy qiymat") -> None:
         super().__init__(status_code=status.HTTP_409_CONFLICT, detail=detail)
 
 
 class RateLimitException(CustomException):
-    def __init__(self, detail: str = "Rate Limit Exceeded") -> None:
+    def __init__(self, detail: str = "So'rovlar chegarasidan oshib ketdi") -> None:
         super().__init__(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=detail)

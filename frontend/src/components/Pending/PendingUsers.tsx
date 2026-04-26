@@ -12,12 +12,12 @@ const PendingUsers = () => (
   <Table>
     <TableHeader>
       <TableRow>
-        <TableHead>Full Name</TableHead>
-        <TableHead>Phone</TableHead>
-        <TableHead>Role</TableHead>
-        <TableHead>Status</TableHead>
+        <TableHead>To&apos;liq ism</TableHead>
+        <TableHead>Telefon</TableHead>
+        <TableHead>Rol</TableHead>
+        <TableHead>Holat</TableHead>
         <TableHead>
-          <span className="sr-only">Actions</span>
+          <span className="sr-only">Amallar</span>
         </TableHead>
       </TableRow>
     </TableHeader>

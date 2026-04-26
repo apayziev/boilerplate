@@ -11,14 +11,14 @@ export const USERNAME_PATTERN = /^[a-z0-9]+$/
 
 // E.164 Uzbek mobile: `+998` + 9 digits, no spaces. Matches `PHONE_PATTERN` on the server.
 export const PHONE_PATTERN = /^\+998\d{9}$/
-const PHONE_INVALID = "Phone must be in the form +998XXXXXXXXX"
+const PHONE_INVALID = "Telefon +998XXXXXXXXX formatida bo'lishi kerak"
 
-const PASSWORD_TOO_SHORT = `Password must be at least ${PASSWORD_MIN_LENGTH} characters`
+const PASSWORD_TOO_SHORT = `Parol kamida ${PASSWORD_MIN_LENGTH} ta belgidan iborat bo'lishi kerak`
 
 /** Required password field (sign-up / new password). */
 export const passwordSchema = z
   .string()
-  .min(1, { message: "Password is required" })
+  .min(1, { message: "Parol majburiy" })
   .min(PASSWORD_MIN_LENGTH, { message: PASSWORD_TOO_SHORT })
 
 /** Optional password field (admin edit form: empty = "don't change"). */
@@ -30,7 +30,7 @@ export const optionalPasswordSchema = z
 
 export const phoneSchema = z
   .string()
-  .min(1, { message: "Phone is required" })
+  .min(1, { message: "Telefon majburiy" })
   .regex(PHONE_PATTERN, { message: PHONE_INVALID })
 
 export const optionalNameSchema = z.string().max(NAME_MAX_LENGTH).optional()
