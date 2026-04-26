@@ -36,18 +36,17 @@ async def test_crud_get_not_found(db):
 async def test_crud_get_multi(db):
     await create_user(db)
     await create_user(db)
-    result = await crud_users.get_multi(db, limit=10)
-    assert len(result["data"]) >= 2
-    assert result["total_count"] >= 2
+    rows, total = await crud_users.get_multi(db, limit=10)
+    assert len(rows) >= 2
+    assert total >= 2
 
 
 @pytest.mark.asyncio
 async def test_crud_get_multi_with_options(db):
     await create_user(db)
-    # Testing that options parameter is accepted in get_multi
-    result = await crud_users.get_multi(db, limit=10, options=[selectinload(User.items)])
-    assert len(result["data"]) >= 1
-    assert isinstance(result["data"][0].items, list)
+    rows, _total = await crud_users.get_multi(db, limit=10, options=[selectinload(User.items)])
+    assert len(rows) >= 1
+    assert isinstance(rows[0].items, list)
 
 
 @pytest.mark.asyncio

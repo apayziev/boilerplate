@@ -29,10 +29,10 @@ async def read_items(
 ) -> ItemsPublic:
     """List items. Superusers see all; everyone else sees only their own."""
     filters: dict = {} if current_user.is_superuser else {"owner_id": current_user.id}
-    result = await crud_items.get_multi(db=session, offset=skip, limit=limit, **filters)
+    rows, total = await crud_items.get_multi(db=session, offset=skip, limit=limit, **filters)
     return ItemsPublic(
-        data=[ItemPublic.model_validate(item) for item in result["data"]],
-        count=result["total_count"],
+        data=[ItemPublic.model_validate(item) for item in rows],
+        count=total,
     )
 
 
