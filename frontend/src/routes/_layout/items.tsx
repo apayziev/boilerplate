@@ -3,18 +3,11 @@ import { createFileRoute } from "@tanstack/react-router"
 import { Search } from "lucide-react"
 import { Suspense } from "react"
 
-import { ItemsService } from "@/client"
 import { DataTable } from "@/components/Common/DataTable"
 import AddItem from "@/components/Items/AddItem"
 import { columns } from "@/components/Items/columns"
 import PendingItems from "@/components/Pending/PendingItems"
-
-function getItemsQueryOptions() {
-  return {
-    queryFn: () => ItemsService.readItems({ skip: 0, limit: 100 }),
-    queryKey: ["items"],
-  }
-}
+import { getItemsQueryOptions } from "@/queries/items"
 
 export const Route = createFileRoute("/_layout/items")({
   component: Items,

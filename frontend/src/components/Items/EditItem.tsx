@@ -65,7 +65,7 @@ const EditItem = ({ item, onSuccess }: EditItemProps) => {
       setIsOpen(false)
       onSuccess()
     },
-    onError: handleError.bind(showErrorToast),
+    onError: handleError(showErrorToast),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["items"] })
     },

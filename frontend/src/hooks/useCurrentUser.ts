@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query"
-import { type UserRead, UsersService } from "@/client"
+import type { UserRead } from "@/client"
+import { getCurrentUserQueryOptions } from "@/queries/users"
 
 const useCurrentUser = () => {
   const { data: currentUser } = useQuery<UserRead | null, Error>({
-    queryKey: ["currentUser"],
-    queryFn: UsersService.readUserMe,
+    ...getCurrentUserQueryOptions(),
     retry: false,
   })
 
