@@ -1,21 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Trash2 } from "lucide-react"
 import { useState } from "react"
-import { useForm } from "react-hook-form"
 
 import { UsersService } from "@/client"
-import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { ConfirmDialog } from "@/components/Common/ConfirmDialog"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
-import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
@@ -25,20 +14,15 @@ interface DeleteUserProps {
 }
 
 const DeleteUser = ({ id, onSuccess }: DeleteUserProps) => {
-  const [isOpen, setIsOpen] = useState(false)
+  const [open, setOpen] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
-  const { handleSubmit } = useForm()
-
-  const deleteUser = async (id: string) => {
-    await UsersService.deleteUser({ userId: Number.parseInt(id) })
-  }
 
   const mutation = useMutation({
-    mutationFn: deleteUser,
+    mutationFn: () => UsersService.deleteUser({ userId: Number.parseInt(id) }),
     onSuccess: () => {
       showSuccessToast("The user was deleted successfully")
-      setIsOpen(false)
+      setOpen(false)
       onSuccess()
     },
     onError: handleError(showErrorToast),
@@ -47,48 +31,33 @@ const DeleteUser = ({ id, onSuccess }: DeleteUserProps) => {
     },
   })
 
-  const onSubmit = async () => {
-    mutation.mutate(id)
-  }
-
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <>
       <DropdownMenuItem
         variant="destructive"
         onSelect={(e) => e.preventDefault()}
-        onClick={() => setIsOpen(true)}
+        onClick={() => setOpen(true)}
       >
         <Trash2 />
         Delete User
       </DropdownMenuItem>
-      <DialogContent className="sm:max-w-md">
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogHeader>
-            <DialogTitle>Delete User</DialogTitle>
-            <DialogDescription>
-              All items associated with this user will also be{" "}
-              <strong>permanently deleted.</strong> Are you sure? You will not
-              be able to undo this action.
-            </DialogDescription>
-          </DialogHeader>
-
-          <DialogFooter className="mt-4">
-            <DialogClose asChild>
-              <Button variant="outline" disabled={mutation.isPending}>
-                Cancel
-              </Button>
-            </DialogClose>
-            <LoadingButton
-              variant="destructive"
-              type="submit"
-              loading={mutation.isPending}
-            >
-              Delete
-            </LoadingButton>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      <ConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        title="Delete User"
+        description={
+          <>
+            All items associated with this user will also be{" "}
+            <strong>permanently deleted.</strong> Are you sure? You will not be
+            able to undo this action.
+          </>
+        }
+        confirmText="Delete"
+        destructive
+        loading={mutation.isPending}
+        onConfirm={() => mutation.mutate()}
+      />
+    </>
   )
 }
 
