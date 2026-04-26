@@ -88,6 +88,10 @@ services:
     restart: always
     ports:
       - "80:80"
+      - "443:443"
+    environment:
+      # `:80` (default) → plain HTTP. Set `SITE_ADDRESS=your-domain.com` to get auto-HTTPS.
+      SITE_ADDRESS: ${SITE_ADDRESS::80}
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
