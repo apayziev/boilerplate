@@ -99,12 +99,12 @@ docker-local: ## Start local development services
 
 .PHONY: docker-prod
 docker-prod: ## Start production services
-	docker compose -f docker-compose.yml up -d
+	docker compose -f docker-compose.prod.yml up -d
 
 .PHONY: docker-down
 docker-down: ## Stop all services
 	docker compose -f docker-compose.local.yml down
-	docker compose -f docker-compose.yml down
+	docker compose -f docker-compose.prod.yml down
 
 .PHONY: docker-logs
 docker-logs: ## View docker compose logs
