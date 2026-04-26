@@ -18,21 +18,12 @@ from app.api.deps import get_current_superuser
 from app.core.middleware import RequestLoggingMiddleware
 from app.core.utils.rate_limit import rate_limiter
 
-from .config import (
-    AppSettings,
-    CORSSettings,
-    DatabaseSettings,
-    DefaultRateLimitSettings,
-    EnvironmentOption,
-    EnvironmentSettings,
-    RedisSettings,
-    settings,
-)
+from .config import EnvironmentOption, Settings, settings
 from .db import async_engine as engine
 from .utils import queue
 
 
-# -------------- database --------------
+# -------------- connection probes --------------
 async def check_database_connection() -> None:
     max_retries = 5
     retry_delay = 2
@@ -85,13 +76,13 @@ async def check_redis_connection() -> None:
 
     for attempt in range(1, max_retries + 1):
         try:
-            for name, connection in checks:
+            for _, connection in checks:
                 await connection.ping()
             logging.info(
-                "Redis connection successful to %s:%s (Verified: %s)",
+                "Redis connection successful to %s:%s (verified: %s)",
                 settings.REDIS_HOST,
                 settings.REDIS_PORT,
-                ", ".join([c[0] for c in checks]),
+                ", ".join(name for name, _ in checks),
             )
             return
         except (asyncio.CancelledError, KeyboardInterrupt):
@@ -115,13 +106,7 @@ async def check_redis_connection() -> None:
             await anyio.sleep(retry_delay)
 
 
-# -------------- Redis Initialization --------------
-# Note: If you want to use independent Redis instances for Cache, Queue, or
-# Rate Limiting, simply create separate connection pools below using
-# different URLs from your settings.
-
-
-# -------------- queue --------------
+# -------------- Redis pools --------------
 async def create_redis_queue_pool() -> None:
     queue.pool = await create_pool(ArqRedisSettings(host=settings.REDIS_HOST, port=settings.REDIS_PORT))
 
@@ -131,116 +116,97 @@ async def close_redis_queue_pool() -> None:
         await queue.pool.aclose()  # type: ignore
 
 
-# -------------- rate limit --------------
 async def create_redis_rate_limit_pool() -> None:
-    rate_limiter.initialize(settings.REDIS_URL)  # type: ignore
+    rate_limiter.initialize(settings.REDIS_URL)
 
 
 async def close_redis_rate_limit_pool() -> None:
     if rate_limiter.client is not None:
-        await rate_limiter.client.aclose()  # type: ignore
+        await rate_limiter.client.aclose()  # type: ignore[attr-defined]
 
 
-# -------------- application --------------
+# -------------- thread pool --------------
 async def set_threadpool_tokens(number_of_tokens: int = 100) -> None:
-    limiter = anyio.to_thread.current_default_thread_limiter()
-    limiter.total_tokens = number_of_tokens
+    """Raise the AnyIO thread-pool size so blocking calls (sync libs, file IO) don't queue behind each other."""
+    anyio.to_thread.current_default_thread_limiter().total_tokens = number_of_tokens
 
 
-def lifespan_factory(
-    settings: (
-        DatabaseSettings | RedisSettings | AppSettings | CORSSettings | DefaultRateLimitSettings | EnvironmentSettings
-    ),
-) -> Callable[[FastAPI], _AsyncGeneratorContextManager[Any]]:
-    """Factory to create a lifespan async context manager for a FastAPI app."""
+# -------------- application factory --------------
+def lifespan_factory(settings: Settings) -> Callable[[FastAPI], _AsyncGeneratorContextManager[Any]]:
+    """Build the app lifespan: open Redis pools, verify connections, then yield. Closes pools on shutdown."""
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator:
         await set_threadpool_tokens()
-
         try:
-            if isinstance(settings, RedisSettings):
-                if settings.ENABLE_REDIS_QUEUE:
-                    await create_redis_queue_pool()
-                if settings.ENABLE_REDIS_RATE_LIMIT:
-                    await create_redis_rate_limit_pool()
-                if settings.ENABLE_REDIS_QUEUE or settings.ENABLE_REDIS_RATE_LIMIT:
-                    await check_redis_connection()
+            if settings.ENABLE_REDIS_QUEUE:
+                await create_redis_queue_pool()
+            if settings.ENABLE_REDIS_RATE_LIMIT:
+                await create_redis_rate_limit_pool()
+            if settings.ENABLE_REDIS_QUEUE or settings.ENABLE_REDIS_RATE_LIMIT:
+                await check_redis_connection()
 
-            if isinstance(settings, DatabaseSettings):
-                await check_database_connection()
-
+            await check_database_connection()
             yield
-
         finally:
-            if isinstance(settings, RedisSettings):
-                if settings.ENABLE_REDIS_QUEUE:
-                    await close_redis_queue_pool()
-                if settings.ENABLE_REDIS_RATE_LIMIT:
-                    await close_redis_rate_limit_pool()
+            if settings.ENABLE_REDIS_QUEUE:
+                await close_redis_queue_pool()
+            if settings.ENABLE_REDIS_RATE_LIMIT:
+                await close_redis_rate_limit_pool()
 
     return lifespan
 
 
-# -------------- application --------------
+def _install_docs_router(application: FastAPI, settings: Settings) -> None:
+    """In production: no docs at all. In staging: docs require a superuser. In local: docs are open."""
+    if settings.ENVIRONMENT == EnvironmentOption.PRODUCTION:
+        return
+
+    deps = [Depends(get_current_superuser)] if settings.ENVIRONMENT != EnvironmentOption.LOCAL else []
+    docs_router = APIRouter(dependencies=deps)
+
+    @docs_router.get("/docs", include_in_schema=False)
+    async def get_swagger_documentation() -> fastapi.responses.HTMLResponse:
+        return get_swagger_ui_html(openapi_url="/openapi.json", title="docs")
+
+    @docs_router.get("/redoc", include_in_schema=False)
+    async def get_redoc_documentation() -> fastapi.responses.HTMLResponse:
+        return get_redoc_html(openapi_url="/openapi.json", title="docs")
+
+    @docs_router.get("/openapi.json", include_in_schema=False)
+    async def openapi() -> dict[str, Any]:
+        return get_openapi(title=application.title, version=application.version, routes=application.routes)
+
+    application.include_router(docs_router)
+
+
 def create_application(
     router: APIRouter,
-    settings: (
-        DatabaseSettings | RedisSettings | AppSettings | CORSSettings | DefaultRateLimitSettings | EnvironmentSettings
-    ),
+    settings: Settings,
     lifespan: Callable[[FastAPI], _AsyncGeneratorContextManager[Any]] | None = None,
     **kwargs: Any,
 ) -> FastAPI:
-    """Creates and configures a FastAPI application based on the provided settings."""
-    # --- before creating application ---
-    if isinstance(settings, AppSettings):
-        to_update = {
-            "title": settings.APP_NAME,
-            "description": settings.APP_DESCRIPTION,
-            "contact": {"name": settings.CONTACT_NAME, "email": settings.CONTACT_EMAIL},
-            "license_info": {"name": settings.LICENSE_NAME},
-        }
-        kwargs.update(to_update)
+    """Build the FastAPI app: metadata, lifespan, middleware (CORS + request logging), and env-conditional docs."""
+    kwargs.update(
+        title=settings.APP_NAME,
+        description=settings.APP_DESCRIPTION,
+        contact={"name": settings.CONTACT_NAME, "email": settings.CONTACT_EMAIL},
+        license_info={"name": settings.LICENSE_NAME},
+        # FastAPI's built-in docs are always disabled — we wire our own conditional ones via `_install_docs_router`.
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=None,
+    )
 
-    if isinstance(settings, EnvironmentSettings):
-        kwargs.update({"docs_url": None, "redoc_url": None, "openapi_url": None})
-
-    # Use custom lifespan if provided, otherwise use default factory
-    if lifespan is None:
-        lifespan = lifespan_factory(settings)
-
-    application = FastAPI(lifespan=lifespan, **kwargs)
+    application = FastAPI(lifespan=lifespan or lifespan_factory(settings), **kwargs)
     application.include_router(router)
     application.add_middleware(RequestLoggingMiddleware)
-
-    if isinstance(settings, CORSSettings):
-        application.add_middleware(
-            CORSMiddleware,
-            allow_origins=settings.CORS_ORIGINS,
-            allow_credentials=True,
-            allow_methods=settings.CORS_METHODS,
-            allow_headers=settings.CORS_HEADERS,
-        )
-
-    if isinstance(settings, EnvironmentSettings):
-        if settings.ENVIRONMENT != EnvironmentOption.PRODUCTION:
-            docs_router = APIRouter()
-            if settings.ENVIRONMENT != EnvironmentOption.LOCAL:
-                docs_router = APIRouter(dependencies=[Depends(get_current_superuser)])
-
-            @docs_router.get("/docs", include_in_schema=False)
-            async def get_swagger_documentation() -> fastapi.responses.HTMLResponse:
-                return get_swagger_ui_html(openapi_url="/openapi.json", title="docs")
-
-            @docs_router.get("/redoc", include_in_schema=False)
-            async def get_redoc_documentation() -> fastapi.responses.HTMLResponse:
-                return get_redoc_html(openapi_url="/openapi.json", title="docs")
-
-            @docs_router.get("/openapi.json", include_in_schema=False)
-            async def openapi() -> dict[str, Any]:
-                out: dict = get_openapi(title=application.title, version=application.version, routes=application.routes)
-                return out
-
-            application.include_router(docs_router)
-
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.CORS_ORIGINS,
+        allow_credentials=True,
+        allow_methods=settings.CORS_METHODS,
+        allow_headers=settings.CORS_HEADERS,
+    )
+    _install_docs_router(application, settings)
     return application
