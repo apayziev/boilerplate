@@ -19,11 +19,12 @@ import { LoadingButton } from "@/components/ui/loading-button"
 import useCurrentUser from "@/hooks/useCurrentUser"
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
+import { emailSchema, optionalNameSchema } from "@/lib/validation"
 import { handleError } from "@/utils"
 
 const formSchema = z.object({
-  name: z.string().max(30).optional(),
-  email: z.email({ message: "Invalid email address" }),
+  name: optionalNameSchema,
+  email: emailSchema,
 })
 
 type FormData = z.infer<typeof formSchema>

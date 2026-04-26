@@ -15,18 +15,13 @@ import {
 import { LoadingButton } from "@/components/ui/loading-button"
 import { PasswordInput } from "@/components/ui/password-input"
 import useCustomToast from "@/hooks/useCustomToast"
+import { passwordSchema } from "@/lib/validation"
 import { handleError } from "@/utils"
 
 const formSchema = z
   .object({
-    current_password: z
-      .string()
-      .min(1, { message: "Password is required" })
-      .min(8, { message: "Password must be at least 8 characters" }),
-    new_password: z
-      .string()
-      .min(1, { message: "Password is required" })
-      .min(8, { message: "Password must be at least 8 characters" }),
+    current_password: passwordSchema,
+    new_password: passwordSchema,
     confirm_password: z
       .string()
       .min(1, { message: "Password confirmation is required" }),

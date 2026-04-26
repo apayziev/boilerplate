@@ -29,16 +29,14 @@ import {
 import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
+import { emailSchema, optionalNameSchema, passwordSchema } from "@/lib/validation"
 import { handleError } from "@/utils"
 
 const formSchema = z
   .object({
-    email: z.email({ message: "Invalid email address" }),
-    name: z.string().optional(),
-    password: z
-      .string()
-      .min(1, { message: "Password is required" })
-      .min(8, { message: "Password must be at least 8 characters" }),
+    email: emailSchema,
+    name: optionalNameSchema,
+    password: passwordSchema,
     confirm_password: z
       .string()
       .min(1, { message: "Please confirm your password" }),
