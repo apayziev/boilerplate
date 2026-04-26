@@ -7,17 +7,31 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.db import async_get_db
 from app.core.exceptions import ForbiddenException, UnauthorizedException
 from app.core.logger import logging
-from app.core.security import TokenType, verify_token
+from app.core.security import ACCESS_COOKIE_NAME, TokenType, verify_token
 from app.crud import crud_users
 from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
-# --- Dependency Type Aliases for Cleaner Routes ---
 SessionDep = Annotated[AsyncSession, Depends(async_get_db)]
 
-# auto_error=False so missing Bearer doesn't immediately 401 — cookie auth is tried first
+# auto_error=False so a missing Bearer header doesn't 401 — the cookie is tried as a fallback.
 _oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/login/access-token", auto_error=False)
+
+
+def _extract_token(request: Request, bearer_token: str | None) -> str | None:
+    """Prefer the explicit Authorization header over the cookie fallback."""
+    return bearer_token or request.cookies.get(ACCESS_COOKIE_NAME)
+
+
+async def _resolve_user(db: AsyncSession, token: str) -> User | None:
+    token_data = await verify_token(token, TokenType.ACCESS, db)
+    if token_data is None:
+        return None
+    user = await crud_users.get_by_login(db=db, identifier=token_data.username_or_email)
+    if user is None or not user.is_active or user.token_version != token_data.token_version:
+        return None
+    return user
 
 
 async def get_current_user(
@@ -25,29 +39,13 @@ async def get_current_user(
     db: SessionDep,
     bearer_token: Annotated[str | None, Depends(_oauth2_scheme)] = None,
 ) -> User:
-    # Prefer httpOnly cookie; fall back to Bearer token (for Swagger UI / API clients)
-    token = request.cookies.get("access_token") or bearer_token
+    token = _extract_token(request, bearer_token)
     if not token:
         raise UnauthorizedException("User not authenticated.")
 
-    token_data = await verify_token(token, TokenType.ACCESS, db)
-    if token_data is None:
+    user = await _resolve_user(db, token)
+    if user is None:
         raise UnauthorizedException("User not authenticated.")
-
-    if "@" in token_data.username_or_email:
-        user = await crud_users.get_by_email(db=db, email=token_data.username_or_email, is_deleted=False)
-    else:
-        user = await crud_users.get_by_username(db=db, username=token_data.username_or_email, is_deleted=False)
-
-    if not user:
-        raise UnauthorizedException("User not found.")
-
-    if not user.is_active:
-        raise UnauthorizedException("Inactive user")
-
-    if user.token_version != token_data.token_version:
-        raise UnauthorizedException("Token has been revoked.")
-
     return user
 
 
@@ -64,30 +62,15 @@ SuperUserDep = Annotated[User, Depends(get_current_superuser)]
 
 
 async def get_optional_user(request: Request, db: SessionDep) -> User | None:
-    token = request.cookies.get("access_token")
-    if not token:
-        auth = request.headers.get("Authorization", "")
-        if auth.startswith("Bearer "):
-            token = auth[7:]
+    auth_header = request.headers.get("Authorization", "")
+    bearer = auth_header[7:] if auth_header.startswith("Bearer ") else None
+    token = _extract_token(request, bearer)
     if not token:
         return None
-
     try:
-        token_data = await verify_token(token, TokenType.ACCESS, db)
-        if token_data is None:
-            return None
-
-        if "@" in token_data.username_or_email:
-            user = await crud_users.get_by_email(db=db, email=token_data.username_or_email, is_deleted=False)
-        else:
-            user = await crud_users.get_by_username(db=db, username=token_data.username_or_email, is_deleted=False)
-
-        if not user or not user.is_active or user.token_version != token_data.token_version:
-            return None
-
-        return user
+        return await _resolve_user(db, token)
     except HTTPException:
         return None
     except Exception as exc:
-        logger.error(f"Unexpected error in get_optional_user: {exc}")
+        logger.error("Unexpected error in get_optional_user: %s", exc)
         return None

@@ -100,7 +100,7 @@ async def test_delete_user(client: AsyncClient, db):
     from tests.helpers.generators import create_user
 
     user = await create_user(db, email="todelete@example.com")
-    token = await create_access_token(data={"sub": user.email, "token_type": "access"})
+    token = create_access_token(data={"sub": user.email})
     headers = {"Authorization": f"Bearer {token}"}
 
     response = await client.delete(f"/api/v1/users/{user.id}", headers=headers)

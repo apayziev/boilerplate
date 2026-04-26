@@ -63,6 +63,12 @@ class CRUDUser(BaseCRUD[User]):
         """
         return await self.get(db, username=username, is_deleted=is_deleted)
 
+    async def get_by_login(self, db: AsyncSession, identifier: str, is_deleted: bool = False) -> User | None:
+        """Look up a user by email if the identifier contains '@', otherwise by username."""
+        if "@" in identifier:
+            return await self.get_by_email(db, email=identifier, is_deleted=is_deleted)
+        return await self.get_by_username(db, username=identifier, is_deleted=is_deleted)
+
     async def create(
         self,
         db: AsyncSession,
