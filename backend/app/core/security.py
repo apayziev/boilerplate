@@ -10,7 +10,7 @@ from pydantic import SecretStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.concurrency import run_in_threadpool
 
-from app.schemas import TokenData
+from app.schemas.auth import TokenData
 
 from .config import EnvironmentOption, settings
 
