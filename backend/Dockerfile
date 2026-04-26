@@ -21,7 +21,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-editable
 
 # --------- Final Stage ---------
-FROM python:3.13-slim-bookworm
+FROM python:3.14-slim-bookworm
 
 # Install curl for healthcheck
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
