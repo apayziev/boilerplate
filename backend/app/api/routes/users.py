@@ -59,10 +59,10 @@ async def read_users(
     limit: int = Query(default=10, ge=1, le=100),
 ) -> PaginatedResponse:
     """List users with pagination."""
-    result = await crud_users.get_multi(db=db, offset=skip, limit=limit)
+    rows, total = await crud_users.get_multi(db=db, offset=skip, limit=limit)
     return PaginatedResponse(
-        data=[UserRead.model_validate(user) for user in result["data"]],
-        count=result["total_count"],
+        data=[UserRead.model_validate(user) for user in rows],
+        count=total,
     )
 
 

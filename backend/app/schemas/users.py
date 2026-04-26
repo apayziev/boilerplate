@@ -35,12 +35,6 @@ _PROFILE_IMAGE_FIELD = Field(
 )
 
 
-class UserBase(BaseModel):
-    name: Annotated[str | None, _NAME_FIELD]
-    username: Annotated[str | None, _USERNAME_FIELD]
-    email: Annotated[EmailStr, _EMAIL_FIELD]
-
-
 class UserRead(BaseModel):
     """Public-facing user representation. Used for every read response."""
 
@@ -55,11 +49,14 @@ class UserRead(BaseModel):
     is_superuser: bool
 
 
-class UserCreate(UserBase):
+class UserCreate(BaseModel):
     """Body for `POST /users` — superuser-only endpoint, so privilege flags live here."""
 
     model_config = ConfigDict(extra="ignore")
 
+    name: Annotated[str | None, _NAME_FIELD]
+    username: Annotated[str | None, _USERNAME_FIELD]
+    email: Annotated[EmailStr, _EMAIL_FIELD]
     password: Annotated[str, Field(examples=["Str1ngst!"])]
     is_superuser: bool = False
     is_active: bool = True
