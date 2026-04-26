@@ -4,6 +4,7 @@ from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
 from app.api.deps import CurrentUser, SessionDep, SuperUserDep
+from app.core.config import settings
 from app.core.exceptions import DuplicateValueException, ForbiddenException, NotFoundException
 from app.core.security import get_password_hash, verify_password
 from app.crud import crud_users
@@ -56,7 +57,7 @@ async def write_user(
 async def read_users(
     db: SessionDep,
     skip: int = Query(default=0, ge=0),
-    limit: int = Query(default=10, ge=1, le=100),
+    limit: int = Query(default=settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
 ) -> PaginatedResponse:
     """List users with pagination."""
     rows, total = await crud_users.get_multi(db=db, offset=skip, limit=limit)

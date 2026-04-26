@@ -4,6 +4,12 @@ from enum import Enum
 from pydantic import SecretStr, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Defaults referenced both by `Settings` field defaults and by the production-readiness validator below.
+_DEFAULT_SECRET_KEY = "secret-key-change-in-production"
+_DEFAULT_ADMIN_PASSWORD = "!Ch4ng3Th1sP4ssW0rd!"
+_DEFAULT_ADMIN_EMAIL = "admin@example.com"
+_DEFAULT_POSTGRES_PASSWORD = "postgres"
+
 
 class EnvironmentOption(str, Enum):
     LOCAL = "local"
@@ -25,14 +31,15 @@ class Settings(BaseSettings):
     CONTACT_EMAIL: str | None = "nizomov.olimbek@gmail.com"
 
     # === Crypto / JWT ===
-    SECRET_KEY: SecretStr = SecretStr("secret-key-change-in-production")
+    SECRET_KEY: SecretStr = SecretStr(_DEFAULT_SECRET_KEY)
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    BCRYPT_ROUNDS: int = 12
 
     # === PostgreSQL ===
     POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "postgres"
+    POSTGRES_PASSWORD: str = _DEFAULT_POSTGRES_PASSWORD
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_PORT: int = 5432
     POSTGRES_DB: str = "postgres"
@@ -44,9 +51,9 @@ class Settings(BaseSettings):
 
     # === First admin user (created on startup) ===
     ADMIN_NAME: str = "admin"
-    ADMIN_EMAIL: str = "admin@example.com"
+    ADMIN_EMAIL: str = _DEFAULT_ADMIN_EMAIL
     ADMIN_USERNAME: str = "admin"
-    ADMIN_PASSWORD: str = "!Ch4ng3Th1sP4ssW0rd!"
+    ADMIN_PASSWORD: str = _DEFAULT_ADMIN_PASSWORD
 
     # === Redis (caching, queue, rate limit) ===
     REDIS_HOST: str = "localhost"
@@ -57,6 +64,24 @@ class Settings(BaseSettings):
     # === Rate-limit defaults ===
     DEFAULT_RATE_LIMIT_LIMIT: int = 10
     DEFAULT_RATE_LIMIT_PERIOD: int = 3600
+    LOGIN_RATE_LIMIT_ATTEMPTS: int = 5
+    LOGIN_RATE_LIMIT_PERIOD: int = 300
+
+    # === Pagination ===
+    DEFAULT_PAGE_SIZE: int = 50
+    MAX_PAGE_SIZE: int = 100
+
+    # === Startup probes ===
+    STARTUP_RETRY_MAX_ATTEMPTS: int = 5
+    STARTUP_RETRY_DELAY_SECONDS: int = 2
+
+    # === Threadpool ===
+    THREADPOOL_TOKENS: int = 100  # AnyIO sync-bridge slots; raise if blocking calls back up.
+
+    # === Reverse-proxy trust ===
+    # Comma-separated list of upstream IPs whose X-Forwarded-* headers we trust.
+    # `*` is permissive — appropriate when Caddy/nginx is the only path to the app.
+    FORWARDED_ALLOW_IPS: list[str] = ["*"]
 
     # === Environment / CORS ===
     ENVIRONMENT: EnvironmentOption = EnvironmentOption.LOCAL
@@ -84,9 +109,6 @@ class Settings(BaseSettings):
         return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}"
 
 
-_DEFAULT_SECRET_KEY = "secret-key-change-in-production"  # sentinel, not a real secret
-
-
 def _validate_production_settings(s: Settings) -> None:
     """Refuse to boot with insecure defaults in production. Caught at startup, not at first request."""
     if s.ENVIRONMENT != EnvironmentOption.PRODUCTION:
@@ -94,10 +116,12 @@ def _validate_production_settings(s: Settings) -> None:
     problems: list[str] = []
     if s.SECRET_KEY.get_secret_value() == _DEFAULT_SECRET_KEY:
         problems.append("SECRET_KEY is the default placeholder")
-    if s.ADMIN_PASSWORD == "!Ch4ng3Th1sP4ssW0rd!":
+    if s.ADMIN_PASSWORD == _DEFAULT_ADMIN_PASSWORD:
         problems.append("ADMIN_PASSWORD is the default placeholder")
-    if s.POSTGRES_PASSWORD == "postgres":
+    if s.POSTGRES_PASSWORD == _DEFAULT_POSTGRES_PASSWORD:
         problems.append("POSTGRES_PASSWORD is the default placeholder")
+    if s.ADMIN_EMAIL == _DEFAULT_ADMIN_EMAIL:
+        problems.append("ADMIN_EMAIL is the default placeholder")
     if problems:
         raise RuntimeError("Refusing to boot in production with insecure defaults: " + "; ".join(problems))
 

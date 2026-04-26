@@ -17,7 +17,7 @@ import { routeTree } from "./routeTree.gen"
 // Cookies are sent automatically via withCredentials — no token in JS memory.
 OpenAPI.BASE = import.meta.env.VITE_API_URL
 OpenAPI.WITH_CREDENTIALS = true
-axios.defaults.timeout = 30_000
+axios.defaults.timeout = Number(import.meta.env.VITE_API_TIMEOUT_MS ?? 30_000)
 
 // --- Silent refresh with concurrent request queuing ---
 

@@ -26,46 +26,43 @@ from .utils import queue
 
 
 # -------------- connection probes --------------
-async def check_database_connection() -> None:
-    max_retries = 5
-    retry_delay = 2
+async def _retry_async(label: str, fn: Callable[[], Any]) -> None:
+    """Run `fn` up to STARTUP_RETRY_MAX_ATTEMPTS times, sleeping STARTUP_RETRY_DELAY_SECONDS between tries.
 
-    for attempt in range(1, max_retries + 1):
+    Cancellation (`KeyboardInterrupt`, `asyncio.CancelledError`) propagates immediately.
+    """
+    max_attempts = settings.STARTUP_RETRY_MAX_ATTEMPTS
+    delay = settings.STARTUP_RETRY_DELAY_SECONDS
+    for attempt in range(1, max_attempts + 1):
         try:
-            async with engine.connect() as conn:
-                await conn.execute(text("SELECT 1"))
-            logging.info(
-                "Database connection successful to %s:%s/%s",
-                settings.POSTGRES_SERVER,
-                settings.POSTGRES_PORT,
-                settings.POSTGRES_DB,
-            )
+            await fn()
             return
         except (asyncio.CancelledError, KeyboardInterrupt):
-            logging.info("Database connection check cancelled by user.")
+            logging.info("%s check cancelled by user.", label)
             raise
         except Exception as e:
-            if attempt == max_retries:
-                logging.error(
-                    "Database connection failed after %s attempts to %s: %s",
-                    max_retries,
-                    settings.POSTGRES_SERVER,
-                    e,
-                )
-                raise e
-            logging.warning(
-                "Database connection attempt %s failed for %s. Retrying in %s seconds...",
-                attempt,
-                settings.POSTGRES_SERVER,
-                retry_delay,
-            )
-            await anyio.sleep(retry_delay)
+            if attempt == max_attempts:
+                logging.error("%s failed after %s attempts: %s", label, max_attempts, e)
+                raise
+            logging.warning("%s attempt %s failed: %s. Retrying in %ss...", label, attempt, e, delay)
+            await anyio.sleep(delay)
+
+
+async def check_database_connection() -> None:
+    async def _probe() -> None:
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+        logging.info(
+            "Database connection successful to %s:%s/%s",
+            settings.POSTGRES_SERVER,
+            settings.POSTGRES_PORT,
+            settings.POSTGRES_DB,
+        )
+
+    await _retry_async("Database connection", _probe)
 
 
 async def check_redis_connection() -> None:
-    max_retries = 5
-    retry_delay = 2
-
     checks: list[tuple[str, Any]] = []
     if queue.pool is not None:
         checks.append(("Queue", queue.pool))
@@ -76,36 +73,17 @@ async def check_redis_connection() -> None:
         logging.info("Redis is disabled (no features enabled), skipping connection check.")
         return
 
-    for attempt in range(1, max_retries + 1):
-        try:
-            for _, connection in checks:
-                await connection.ping()
-            logging.info(
-                "Redis connection successful to %s:%s (verified: %s)",
-                settings.REDIS_HOST,
-                settings.REDIS_PORT,
-                ", ".join(name for name, _ in checks),
-            )
-            return
-        except (asyncio.CancelledError, KeyboardInterrupt):
-            logging.info("Redis connection check cancelled by user.")
-            raise
-        except Exception as e:
-            if attempt == max_retries:
-                logging.error(
-                    "Redis connection failed after %s attempts to %s: %s",
-                    max_retries,
-                    settings.REDIS_HOST,
-                    e,
-                )
-                raise e
-            logging.warning(
-                "Redis connection attempt %s failed for %s. Retrying in %s seconds...",
-                attempt,
-                settings.REDIS_HOST,
-                retry_delay,
-            )
-            await anyio.sleep(retry_delay)
+    async def _probe() -> None:
+        for _, connection in checks:
+            await connection.ping()
+        logging.info(
+            "Redis connection successful to %s:%s (verified: %s)",
+            settings.REDIS_HOST,
+            settings.REDIS_PORT,
+            ", ".join(name for name, _ in checks),
+        )
+
+    await _retry_async("Redis connection", _probe)
 
 
 # -------------- Redis pools --------------
@@ -128,9 +106,13 @@ async def close_redis_rate_limit_pool() -> None:
 
 
 # -------------- thread pool --------------
-async def set_threadpool_tokens(number_of_tokens: int = 100) -> None:
-    """Raise the AnyIO thread-pool size so blocking calls (sync libs, file IO) don't queue behind each other."""
-    anyio.to_thread.current_default_thread_limiter().total_tokens = number_of_tokens
+async def set_threadpool_tokens(number_of_tokens: int | None = None) -> None:
+    """Raise the AnyIO thread-pool size so blocking calls (sync libs, file IO) don't queue behind each other.
+
+    Reads `THREADPOOL_TOKENS` from settings unless a value is passed explicitly.
+    """
+    tokens = number_of_tokens if number_of_tokens is not None else settings.THREADPOOL_TOKENS
+    anyio.to_thread.current_default_thread_limiter().total_tokens = tokens
 
 
 # -------------- application factory --------------
@@ -212,15 +194,23 @@ def create_application(
     )
     # Trust X-Forwarded-* from the reverse proxy (Caddy in prod). Without this, `request.client.host` is the
     # proxy IP for every request, which would collapse all users into a single rate-limit bucket.
-    application.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")  # type: ignore[arg-type]
+    # `FORWARDED_ALLOW_IPS=["*"]` is permissive — appropriate when only Caddy/nginx fronts the app.
+    application.add_middleware(
+        ProxyHeadersMiddleware,  # type: ignore[arg-type]
+        trusted_hosts=settings.FORWARDED_ALLOW_IPS,
+    )
     _install_metrics(application)
     _install_docs_router(application, settings)
     return application
+
+
+# Routes excluded from request-count series and the access-log middleware. Single source of truth.
+NON_BUSINESS_PATHS: list[str] = ["/metrics", "/api/v1/health", "/api/v1/ready"]
 
 
 def _install_metrics(application: FastAPI) -> None:
     """Expose Prometheus metrics at `/metrics`. In production, restrict access at the proxy layer
     (Caddy → only allow scrapes from the metrics network) — this endpoint is unauthenticated."""
     Instrumentator(
-        excluded_handlers=["/metrics", "/api/v1/health", "/api/v1/ready"],
+        excluded_handlers=NON_BUSINESS_PATHS,
     ).instrument(application).expose(application, include_in_schema=False, should_gzip=True)

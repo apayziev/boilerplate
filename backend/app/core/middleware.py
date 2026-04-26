@@ -11,18 +11,18 @@ logger = logging.getLogger(__name__)
 
 REQUEST_ID_HEADER = "X-Request-ID"
 
-# Paths skipped to keep liveness/readiness checks out of the log stream.
-_SKIP_PATHS = {"/api/v1/health", "/api/v1/ready"}
-
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
     """Attach an `X-Request-ID` to every request and log a structured summary on completion."""
 
     async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+        # Local import keeps this module free of `setup` dependencies during initial app construction.
+        from app.core.setup import NON_BUSINESS_PATHS
+
         request_id = request.headers.get(REQUEST_ID_HEADER) or uuid.uuid4().hex
         request.state.request_id = request_id
 
-        if request.url.path in _SKIP_PATHS:
+        if request.url.path in NON_BUSINESS_PATHS:
             response = await call_next(request)
             response.headers[REQUEST_ID_HEADER] = request_id
             return response
