@@ -66,6 +66,7 @@ export type ReadyCheck = {
   version: string
   app: string
   database: string
+  redis: string
   timestamp: string
 }
 

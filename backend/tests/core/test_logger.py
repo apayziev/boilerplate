@@ -1,20 +1,36 @@
+import json
 import logging
-import os
+from io import StringIO
 
-from app.core import logger
-
-
-def test_log_directory_creation():
-    # Helper to check if logs dir was created
-    log_dir = logger.LOG_DIR
-    assert os.path.exists(log_dir)
-    assert os.path.isdir(log_dir)
+from app.core.logger import JsonFormatter, setup_logging
 
 
-def test_logger_file():
-    log_file = logger.LOG_FILE_PATH
-    # Maybe check if file exists, or if logger has handlers
-    logger_instance = logging.getLogger("")
-    handlers = [h for h in logger_instance.handlers if isinstance(h, logging.handlers.RotatingFileHandler)]
-    assert len(handlers) > 0
-    assert handlers[0].baseFilename == log_file
+def test_setup_logging_replaces_root_handlers():
+    setup_logging()
+    root = logging.getLogger()
+    assert len(root.handlers) == 1
+    handler = root.handlers[0]
+    assert isinstance(handler, logging.StreamHandler)
+    assert isinstance(handler.formatter, JsonFormatter)
+
+
+def test_json_formatter_emits_valid_json_with_extras():
+    buf = StringIO()
+    handler = logging.StreamHandler(buf)
+    handler.setFormatter(JsonFormatter())
+
+    logger = logging.getLogger("test_json_formatter")
+    logger.handlers = [handler]
+    logger.propagate = False
+    logger.setLevel(logging.INFO)
+
+    logger.info("request", extra={"request_id": "abc123", "method": "GET", "path": "/x", "status_code": 200})
+
+    payload = json.loads(buf.getvalue().strip())
+    assert payload["level"] == "INFO"
+    assert payload["logger"] == "test_json_formatter"
+    assert payload["message"] == "request"
+    assert payload["request_id"] == "abc123"
+    assert payload["method"] == "GET"
+    assert payload["status_code"] == 200
+    assert "timestamp" in payload

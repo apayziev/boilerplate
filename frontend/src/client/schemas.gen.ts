@@ -294,6 +294,10 @@ export const ReadyCheckSchema = {
       type: "string",
       title: "Database",
     },
+    redis: {
+      type: "string",
+      title: "Redis",
+    },
     timestamp: {
       type: "string",
       title: "Timestamp",
@@ -306,6 +310,7 @@ export const ReadyCheckSchema = {
     "version",
     "app",
     "database",
+    "redis",
     "timestamp",
   ],
   title: "ReadyCheck",

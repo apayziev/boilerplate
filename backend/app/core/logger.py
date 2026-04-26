@@ -1,28 +1,38 @@
+"""Structured JSON logging to stdout. 12-factor: the process does not write its own log files."""
+
+import json
 import logging
-import os
-from logging.handlers import RotatingFileHandler
+import sys
+from typing import Any
 
-LOG_DIR = os.getenv("LOG_DIR", os.path.join(os.path.dirname(os.path.dirname(__file__)), "logs"))
+_EXTRA_FIELDS = ("request_id", "method", "path", "status_code", "duration_ms")
 
-try:
-    if not os.path.exists(LOG_DIR):
-        os.makedirs(LOG_DIR, exist_ok=True)
-    LOG_FILE_PATH = os.path.join(LOG_DIR, "app.log")
-    HAS_FILE_LOGGING = True
-except Exception as e:
-    print(f"Warning: Could not initialize file logging: {e}. Falling back to console logging.")
-    HAS_FILE_LOGGING = False
 
-LOGGING_LEVEL = logging.INFO
-LOGGING_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+class JsonFormatter(logging.Formatter):
+    """Emit each log record as a single-line JSON object."""
 
-logging.basicConfig(level=LOGGING_LEVEL, format=LOGGING_FORMAT)
+    def format(self, record: logging.LogRecord) -> str:
+        payload: dict[str, Any] = {
+            "timestamp": self.formatTime(record, "%Y-%m-%dT%H:%M:%S%z"),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+        }
+        for key in _EXTRA_FIELDS:
+            value = getattr(record, key, None)
+            if value is not None:
+                payload[key] = value
+        if record.exc_info:
+            payload["exc_info"] = self.formatException(record.exc_info)
+        return json.dumps(payload)
 
-if HAS_FILE_LOGGING:
-    try:
-        file_handler = RotatingFileHandler(LOG_FILE_PATH, maxBytes=10485760, backupCount=5)
-        file_handler.setLevel(LOGGING_LEVEL)
-        file_handler.setFormatter(logging.Formatter(LOGGING_FORMAT))
-        logging.getLogger("").addHandler(file_handler)
-    except Exception as e:
-        print(f"Warning: Failed to add file handler: {e}")
+
+def setup_logging(level: int = logging.INFO) -> None:
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(JsonFormatter())
+    root = logging.getLogger()
+    root.handlers = [handler]
+    root.setLevel(level)
+
+
+setup_logging()
