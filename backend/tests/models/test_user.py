@@ -8,7 +8,7 @@ async def test_user_creation(db):
     user = User(
         name="Test User",
         username="testuser",
-        email="test@example.com",
+        phone="+998900000001",
         hashed_password="hashed_secret",
     )
     db.add(user)
@@ -25,7 +25,7 @@ async def test_soft_delete(db):
     user = User(
         name="Delete User",
         username="deleteuser",
-        email="delete@example.com",
+        phone="+998900000002",
         hashed_password="hashed_secret",
     )
     db.add(user)

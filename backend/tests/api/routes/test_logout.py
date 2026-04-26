@@ -10,7 +10,7 @@ async def test_logout(client: AsyncClient, db, normal_user_token_headers):
     # normal_user_token_headers contains access token.
     # We can create a refresh token manually.
 
-    refresh_token = create_refresh_token(data={"sub": "test@example.com"})
+    refresh_token = create_refresh_token(data={"sub": "+998900000001"})
 
     client.cookies.set("refresh_token", refresh_token)
 

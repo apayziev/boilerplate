@@ -4,10 +4,12 @@ from pydantic import (
     BaseModel,
     BeforeValidator,
     ConfigDict,
-    EmailStr,
     Field,
     field_validator,
 )
+
+# Uzbekistan E.164 phone — `+998` country code + 9 digits. Stored canonical, no spaces.
+PHONE_PATTERN = r"^\+998\d{9}$"
 
 
 def validate_password_strength(v: str) -> str:
@@ -27,7 +29,8 @@ def validate_password_strength(v: str) -> str:
 
 _NAME_FIELD = Field(min_length=2, max_length=30, examples=["User Userson"], default=None)
 _USERNAME_FIELD = Field(min_length=2, max_length=20, pattern=r"^[a-z0-9]+$", examples=["userson"], default=None)
-_EMAIL_FIELD = Field(examples=["user.userson@example.com"])
+_PHONE_FIELD = Field(pattern=PHONE_PATTERN, examples=["+998901234567"])
+_OPTIONAL_PHONE_FIELD = Field(pattern=PHONE_PATTERN, examples=["+998901234567"], default=None)
 _PROFILE_IMAGE_FIELD = Field(
     pattern=r"^(https?|ftp)://[^\s/$.?#].[^\s]*$",
     examples=["https://www.profileimageurl.com"],
@@ -43,7 +46,7 @@ class UserRead(BaseModel):
     id: Annotated[str, BeforeValidator(lambda v: str(v)), Field(examples=["1"])]
     name: Annotated[str | None, _NAME_FIELD]
     username: Annotated[str, Field(min_length=2, max_length=20, pattern=r"^[a-z0-9]+$", examples=["userson"])]
-    email: Annotated[EmailStr, _EMAIL_FIELD]
+    phone: Annotated[str, _PHONE_FIELD]
     profile_image_url: str
     is_active: bool
     is_superuser: bool
@@ -56,7 +59,7 @@ class UserCreate(BaseModel):
 
     name: Annotated[str | None, _NAME_FIELD]
     username: Annotated[str | None, _USERNAME_FIELD]
-    email: Annotated[EmailStr, _EMAIL_FIELD]
+    phone: Annotated[str, _PHONE_FIELD]
     password: Annotated[str, Field(examples=["Str1ngst!"])]
     is_superuser: bool = False
     is_active: bool = True
@@ -78,7 +81,7 @@ class UserUpdate(BaseModel):
 
     name: Annotated[str | None, _NAME_FIELD]
     username: Annotated[str | None, _USERNAME_FIELD]
-    email: Annotated[EmailStr | None, Field(examples=["user.userberg@example.com"], default=None)]
+    phone: Annotated[str | None, _OPTIONAL_PHONE_FIELD]
     profile_image_url: Annotated[str | None, _PROFILE_IMAGE_FIELD]
 
 

@@ -15,18 +15,18 @@ logger = logging.getLogger(__name__)
 async def create_first_user(session: AsyncSession) -> None:
     try:
         name = settings.ADMIN_NAME
-        email = settings.ADMIN_EMAIL
+        phone = settings.ADMIN_PHONE
         username = settings.ADMIN_USERNAME
         hashed_password = get_password_hash(settings.ADMIN_PASSWORD)
 
-        query = select(User).filter_by(email=email)
+        query = select(User).filter_by(phone=phone)
         result = await session.execute(query)
         user = result.scalar_one_or_none()
 
         if user is None:
             user = User(
                 name=name,
-                email=email,
+                phone=phone,
                 username=username,
                 hashed_password=hashed_password,
                 is_active=True,
@@ -34,20 +34,20 @@ async def create_first_user(session: AsyncSession) -> None:
             )
             session.add(user)
             await session.commit()
-            logger.info(f"Admin user {username} created successfully.")
+            logger.info("Admin user %s created successfully.", username)
         else:
-            # Update password if it changed in the environment
+            # Refresh password from environment if it changed
             if not await verify_password(settings.ADMIN_PASSWORD, user.hashed_password):
                 user.hashed_password = hashed_password
                 session.add(user)
                 await session.commit()
-                logger.info(f"Admin user {username} password updated.")
+                logger.info("Admin user %s password updated.", username)
             else:
-                logger.info(f"Admin user {username} already exists, no changes needed.")
+                logger.info("Admin user %s already exists, no changes needed.", username)
 
     except Exception as e:
         await session.rollback()
-        logger.error(f"Error creating admin user: {e}")
+        logger.error("Error creating admin user: %s", e)
 
 
 async def main() -> None:

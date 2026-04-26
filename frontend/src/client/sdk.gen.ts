@@ -251,7 +251,7 @@ export class LoginService {
 export class TasksService {
   /**
    * Create Task
-   * Create a new background task.
+   * Enqueue a sample background task and return its job id.
    * @param data The data for the request.
    * @param data.message
    * @returns Job Successful Response
@@ -274,7 +274,7 @@ export class TasksService {
 
   /**
    * Get Task
-   * Get information about a specific background task.
+   * Look up an ARQ job by id. Returns `None` if the job has expired from Redis.
    * @param data The data for the request.
    * @param data.taskId
    * @returns unknown Successful Response
@@ -299,7 +299,7 @@ export class TasksService {
 export class UsersService {
   /**
    * Write User
-   * Create a new user (superuser only). If `username` is omitted, derive one from the email local-part.
+   * Create a new user (superuser only). If `username` is omitted, derive one from the phone digits.
    * @param data The data for the request.
    * @param data.requestBody
    * @returns UserRead Successful Response

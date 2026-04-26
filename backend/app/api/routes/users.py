@@ -1,5 +1,3 @@
-import re
-
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
@@ -19,12 +17,17 @@ class PaginatedResponse(BaseModel):
     count: int
 
 
-async def _ensure_unique(db: SessionDep, *, email: str | None, username: str | None, current: User) -> None:
-    """Reject the update when another user already owns the requested email or username."""
-    if email is not None and email != current.email and await crud_users.exists(db=db, email=email):
-        raise DuplicateValueException("Email is already registered")
+async def _ensure_unique(db: SessionDep, *, phone: str | None, username: str | None, current: User) -> None:
+    """Reject the update when another user already owns the requested phone or username."""
+    if phone is not None and phone != current.phone and await crud_users.exists(db=db, phone=phone):
+        raise DuplicateValueException("Phone is already registered")
     if username is not None and username != current.username and await crud_users.exists(db=db, username=username):
         raise DuplicateValueException("Username not available")
+
+
+def _derive_username_from_phone(phone: str) -> str:
+    """Strip the `+` prefix to use the digits as a fallback username (e.g. `+998901234567` → `998901234567`)."""
+    return phone.lstrip("+")
 
 
 @router.post("/", response_model=UserRead, status_code=201, operation_id="create_user")
@@ -33,15 +36,15 @@ async def write_user(
     current_user: SuperUserDep,
     db: SessionDep,
 ) -> UserRead:
-    """Create a new user (superuser only). If `username` is omitted, derive one from the email local-part."""
-    if await crud_users.exists(db=db, email=user.email):
-        raise DuplicateValueException("Email is already registered")
+    """Create a new user (superuser only). If `username` is omitted, derive one from the phone digits."""
+    if await crud_users.exists(db=db, phone=user.phone):
+        raise DuplicateValueException("Phone is already registered")
 
     if user.username:
         if await crud_users.exists(db=db, username=user.username):
             raise DuplicateValueException("Username not available")
     else:
-        base_username = re.sub(r"[^a-z0-9]", "", user.email.split("@")[0].lower())
+        base_username = _derive_username_from_phone(user.phone)
         username = base_username
         counter = 1
         while await crud_users.exists(db=db, username=username):
@@ -79,7 +82,7 @@ async def update_user_me(
     db: SessionDep,
 ) -> UserRead:
     """Update the caller's own profile. Privilege flags are not in the schema, so escalation is impossible here."""
-    await _ensure_unique(db, email=values.email, username=values.username, current=current_user)
+    await _ensure_unique(db, phone=values.phone, username=values.username, current=current_user)
     update_data = values.model_dump(exclude_unset=True)
     updated_user = await crud_users.update(db=db, db_user=current_user, user_update=update_data)
     return UserRead.model_validate(updated_user)
@@ -132,7 +135,7 @@ async def patch_user(
     if db_user is None:
         raise NotFoundException("User not found")
 
-    await _ensure_unique(db, email=values.email, username=values.username, current=db_user)
+    await _ensure_unique(db, phone=values.phone, username=values.username, current=db_user)
     updated_user = await crud_users.update(db=db, db_user=db_user, user_update=values.model_dump(exclude_unset=True))
     return UserRead.model_validate(updated_user)
 

@@ -18,6 +18,7 @@ function getEnvVar(name: string, defaultValue?: string): string {
   return value
 }
 
-// Use backend admin credentials for testing
-export const firstSuperuser = getEnvVar("ADMIN_EMAIL", "admin@example.com")
+// Backend admin credentials. The phone is canonical-form `+998…` (no spaces).
+// Login also accepts the admin's username, but tests use the phone for clarity.
+export const firstSuperuser = getEnvVar("ADMIN_PHONE", "+998901234567")
 export const firstSuperuserPassword = getEnvVar("ADMIN_PASSWORD", "Change-me2")

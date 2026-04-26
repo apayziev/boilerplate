@@ -9,6 +9,10 @@ export const USERNAME_MIN_LENGTH = 2
 export const USERNAME_MAX_LENGTH = 20
 export const USERNAME_PATTERN = /^[a-z0-9]+$/
 
+// E.164 Uzbek mobile: `+998` + 9 digits, no spaces. Matches `PHONE_PATTERN` on the server.
+export const PHONE_PATTERN = /^\+998\d{9}$/
+const PHONE_INVALID = "Phone must be in the form +998XXXXXXXXX"
+
 const PASSWORD_TOO_SHORT = `Password must be at least ${PASSWORD_MIN_LENGTH} characters`
 
 /** Required password field (sign-up / new password). */
@@ -24,6 +28,9 @@ export const optionalPasswordSchema = z
   .optional()
   .or(z.literal(""))
 
-export const emailSchema = z.email({ message: "Invalid email address" })
+export const phoneSchema = z
+  .string()
+  .min(1, { message: "Phone is required" })
+  .regex(PHONE_PATTERN, { message: PHONE_INVALID })
 
 export const optionalNameSchema = z.string().max(NAME_MAX_LENGTH).optional()

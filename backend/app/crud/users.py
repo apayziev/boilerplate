@@ -15,89 +15,25 @@ logger = logging.getLogger(__name__)
 class CRUDUser(BaseCRUD[User]):
     """CRUD operations for User model with authentication logic."""
 
-    async def get_by_email(
-        self,
-        db: AsyncSession,
-        email: str,
-        is_deleted: bool = False,
-    ) -> User | None:
-        """Get user by email address.
+    async def get_by_phone(self, db: AsyncSession, phone: str, is_deleted: bool = False) -> User | None:
+        """Get user by E.164 phone (`+998…`)."""
+        return await self.get(db, phone=phone, is_deleted=is_deleted)
 
-        Parameters
-        ----------
-        db : AsyncSession
-            The database session.
-        email : str
-            Email address to search for.
-        is_deleted : bool, default=False
-            Whether to include deleted users.
-
-        Returns
-        -------
-        User | None
-            The user if found, None otherwise.
-        """
-        return await self.get(db, email=email, is_deleted=is_deleted)
-
-    async def get_by_username(
-        self,
-        db: AsyncSession,
-        username: str,
-        is_deleted: bool = False,
-    ) -> User | None:
-        """Get user by username.
-
-        Parameters
-        ----------
-        db : AsyncSession
-            The database session.
-        username : str
-            Username to search for.
-        is_deleted : bool, default=False
-            Whether to include deleted users.
-
-        Returns
-        -------
-        User | None
-            The user if found, None otherwise.
-        """
+    async def get_by_username(self, db: AsyncSession, username: str, is_deleted: bool = False) -> User | None:
+        """Get user by username."""
         return await self.get(db, username=username, is_deleted=is_deleted)
 
     async def get_by_login(self, db: AsyncSession, identifier: str, is_deleted: bool = False) -> User | None:
-        """Look up a user by email if the identifier contains '@', otherwise by username."""
-        if "@" in identifier:
-            return await self.get_by_email(db, email=identifier, is_deleted=is_deleted)
+        """Look up a user by phone if the identifier starts with `+`, otherwise by username."""
+        if identifier.startswith("+"):
+            return await self.get_by_phone(db, phone=identifier, is_deleted=is_deleted)
         return await self.get_by_username(db, username=identifier, is_deleted=is_deleted)
 
-    async def create(
-        self,
-        db: AsyncSession,
-        user_create: UserCreate,
-    ) -> User:
-        """Create a new user with hashed password.
-
-        Parameters
-        ----------
-        db : AsyncSession
-            The database session.
-        user_create : UserCreate
-            User creation data including plain password.
-
-        Returns
-        -------
-        User
-            The created user instance.
-
-        Raises
-        ------
-        Exception
-            If email or username already exists (handle in route layer).
-        """
+    async def create(self, db: AsyncSession, user_create: UserCreate) -> User:
+        """Create a new user with hashed password. Caller should pre-check phone/username uniqueness."""
         hashed_password = get_password_hash(user_create.password)
-
         user_data = user_create.model_dump(exclude={"password", "name"})
         db_user = User(**user_data, hashed_password=hashed_password, name=user_create.name)
-
         db.add(db_user)
         await db.commit()
         await db.refresh(db_user)
@@ -109,22 +45,7 @@ class CRUDUser(BaseCRUD[User]):
         db_user: User,
         user_update: UserUpdate | dict[str, Any],
     ) -> User:
-        """Update user information.
-
-        Parameters
-        ----------
-        db : AsyncSession
-            The database session.
-        db_user : User
-            The existing user instance to update.
-        user_update : UserUpdate | dict
-            Fields to update (only provided fields will be updated).
-
-        Returns
-        -------
-        User
-            The updated user instance.
-        """
+        """Update user fields. Only fields present in `user_update` are touched."""
         if isinstance(user_update, dict):
             update_data = user_update
         else:
@@ -144,41 +65,20 @@ class CRUDUser(BaseCRUD[User]):
     async def authenticate(
         self,
         db: AsyncSession,
-        username_or_email: str,
+        username_or_phone: str,
         password: str,
     ) -> User | None:
-        """Authenticate a user by username/email and password.
-
-        Parameters
-        ----------
-        db : AsyncSession
-            The database session.
-        username_or_email : str
-            Username or email address.
-        password : str
-            Plain text password to verify.
-
-        Returns
-        -------
-        User | None
-            The user if authentication succeeds, None otherwise.
-        """
-        if "@" in username_or_email:
-            db_user = await self.get_by_email(db, email=username_or_email)
-        else:
-            db_user = await self.get_by_username(db, username=username_or_email)
-
+        """Authenticate by username (or `+998…` phone) + password. Returns the user, or None on failure."""
+        db_user = await self.get_by_login(db, identifier=username_or_phone)
         if db_user is None:
             return None
-
         if not await verify_password(password, db_user.hashed_password):
-            logger.warning("Failed login attempt for: %s", username_or_email)
+            logger.warning("Failed login attempt for: %s", username_or_phone)
             return None
-
         return db_user
 
     async def increment_token_version(self, db: AsyncSession, user: User) -> User:
-        """Increment the user's token_version, invalidating all previously issued tokens."""
+        """Increment `token_version`, which invalidates every outstanding access/refresh token."""
         user.token_version += 1
         db.add(user)
         await db.commit()

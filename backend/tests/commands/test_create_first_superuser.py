@@ -8,8 +8,7 @@ from app.models.user import User
 
 @pytest.mark.asyncio
 async def test_create_first_superuser(db):
-    # Ensure no admin exists first
-    stmt = select(User).where(User.email == settings.ADMIN_EMAIL)
+    stmt = select(User).where(User.phone == settings.ADMIN_PHONE)
     result = await db.execute(stmt)
     existing = result.scalar_one_or_none()
     if existing:
@@ -23,15 +22,15 @@ async def test_create_first_superuser(db):
 
     assert user is not None
     assert user.is_superuser is True
-    assert user.email == settings.ADMIN_EMAIL
+    assert user.phone == settings.ADMIN_PHONE
 
 
 @pytest.mark.asyncio
 async def test_create_first_superuser_idempotency(db):
     await create_first_user(db)
-    await create_first_user(db)  # Should not fail or create duplicate
+    await create_first_user(db)  # Should not fail or create a duplicate
 
-    stmt = select(User).where(User.email == settings.ADMIN_EMAIL)
+    stmt = select(User).where(User.phone == settings.ADMIN_PHONE)
     result = await db.execute(stmt)
     users = result.scalars().all()
 

@@ -17,12 +17,12 @@ async def test_password_hashing():
 async def test_token_creation_and_verify(db, mock_redis):
     # verify_token(token, type, db)
 
-    data = {"sub": "test@example.com"}
+    data = {"sub": "+998900000001"}
     token = create_access_token(data=data)
 
     verified_data = await verify_token(token, TokenType.ACCESS, db)
     assert verified_data is not None
-    assert verified_data.username_or_email == "test@example.com"
+    assert verified_data.username_or_phone == "+998900000001"
 
     # Test wrong type
     verified_wrong_type = await verify_token(token, TokenType.REFRESH, db)

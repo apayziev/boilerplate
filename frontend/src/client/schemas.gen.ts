@@ -379,18 +379,18 @@ export const UserAdminUpdateSchema = {
       title: "Username",
       examples: ["userson"],
     },
-    email: {
+    phone: {
       anyOf: [
         {
           type: "string",
-          format: "email",
+          pattern: "^\\+998\\d{9}$",
         },
         {
           type: "null",
         },
       ],
-      title: "Email",
-      examples: ["user.userberg@example.com"],
+      title: "Phone",
+      examples: ["+998901234567"],
     },
     profile_image_url: {
       anyOf: [
@@ -475,11 +475,11 @@ export const UserCreateSchema = {
       title: "Username",
       examples: ["userson"],
     },
-    email: {
+    phone: {
       type: "string",
-      format: "email",
-      title: "Email",
-      examples: ["user.userson@example.com"],
+      pattern: "^\\+998\\d{9}$",
+      title: "Phone",
+      examples: ["+998901234567"],
     },
     password: {
       type: "string",
@@ -498,7 +498,7 @@ export const UserCreateSchema = {
     },
   },
   type: "object",
-  required: ["email", "password"],
+  required: ["phone", "password"],
   title: "UserCreate",
   description:
     "Body for `POST /users` — superuser-only endpoint, so privilege flags live here.",
@@ -533,11 +533,11 @@ export const UserReadSchema = {
       title: "Username",
       examples: ["userson"],
     },
-    email: {
+    phone: {
       type: "string",
-      format: "email",
-      title: "Email",
-      examples: ["user.userson@example.com"],
+      pattern: "^\\+998\\d{9}$",
+      title: "Phone",
+      examples: ["+998901234567"],
     },
     profile_image_url: {
       type: "string",
@@ -556,7 +556,7 @@ export const UserReadSchema = {
   required: [
     "id",
     "username",
-    "email",
+    "phone",
     "profile_image_url",
     "is_active",
     "is_superuser",
@@ -597,18 +597,18 @@ export const UserUpdateSchema = {
       title: "Username",
       examples: ["userson"],
     },
-    email: {
+    phone: {
       anyOf: [
         {
           type: "string",
-          format: "email",
+          pattern: "^\\+998\\d{9}$",
         },
         {
           type: "null",
         },
       ],
-      title: "Email",
-      examples: ["user.userberg@example.com"],
+      title: "Phone",
+      examples: ["+998901234567"],
     },
     profile_image_url: {
       anyOf: [
@@ -655,6 +655,13 @@ export const ValidationErrorSchema = {
     type: {
       type: "string",
       title: "Error Type",
+    },
+    input: {
+      title: "Input",
+    },
+    ctx: {
+      type: "object",
+      title: "Context",
     },
   },
   type: "object",

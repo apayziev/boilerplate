@@ -86,7 +86,7 @@ export type UpdatePassword = {
 export type UserAdminUpdate = {
   name?: string | null
   username?: string | null
-  email?: string | null
+  phone?: string | null
   profile_image_url?: string | null
   password?: string | null
   is_active?: boolean | null
@@ -99,7 +99,7 @@ export type UserAdminUpdate = {
 export type UserCreate = {
   name?: string | null
   username?: string | null
-  email: string
+  phone: string
   password: string
   is_superuser?: boolean
   is_active?: boolean
@@ -112,7 +112,7 @@ export type UserRead = {
   id: string
   name?: string | null
   username: string
-  email: string
+  phone: string
   profile_image_url: string
   is_active: boolean
   is_superuser: boolean
@@ -127,7 +127,7 @@ export type UserRead = {
 export type UserUpdate = {
   name?: string | null
   username?: string | null
-  email?: string | null
+  phone?: string | null
   profile_image_url?: string | null
 }
 
@@ -135,6 +135,10 @@ export type ValidationError = {
   loc: Array<string | number>
   msg: string
   type: string
+  input?: unknown
+  ctx?: {
+    [key: string]: unknown
+  }
 }
 
 export type HealthApiV1HealthGetResponse = HealthCheck
