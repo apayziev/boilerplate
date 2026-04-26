@@ -79,16 +79,34 @@ export type UpdatePassword = {
   new_password: string
 }
 
+/**
+ * Body for `PATCH /users/{user_id}` — superuser-only endpoint.
+ */
+export type UserAdminUpdate = {
+  name?: string | null
+  username?: string | null
+  email?: string | null
+  profile_image_url?: string | null
+  password?: string | null
+  is_active?: boolean | null
+  is_superuser?: boolean | null
+}
+
+/**
+ * Body for `POST /users` — superuser-only endpoint, so privilege flags live here.
+ */
 export type UserCreate = {
   name?: string | null
   username?: string | null
   email: string
   password: string
-  confirm_password?: string | null
   is_superuser?: boolean
   is_active?: boolean
 }
 
+/**
+ * Public-facing user representation. Used for every read response.
+ */
 export type UserRead = {
   id: string
   full_name: string
@@ -99,15 +117,17 @@ export type UserRead = {
   is_superuser: boolean
 }
 
+/**
+ * Body for `PATCH /users/me` — self-update only. Privilege flags and password are intentionally absent.
+ *
+ * Privilege flags can only be changed via `UserAdminUpdate` on the admin endpoint.
+ * Password changes go through `PATCH /users/me/password` so the current password is verified.
+ */
 export type UserUpdate = {
   name?: string | null
   username?: string | null
   email?: string | null
   profile_image_url?: string | null
-  password?: string | null
-  confirm_password?: string | null
-  is_active?: boolean | null
-  is_superuser?: boolean | null
 }
 
 export type ValidationError = {
@@ -224,7 +244,7 @@ export type ReadUserByIdData = {
 export type ReadUserByIdResponse = UserRead
 
 export type UpdateUserData = {
-  requestBody: UserUpdate
+  requestBody: UserAdminUpdate
   userId: number
 }
 
