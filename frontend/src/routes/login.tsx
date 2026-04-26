@@ -21,7 +21,7 @@ import { PasswordInput } from "@/components/ui/password-input"
 import useAuth from "@/hooks/useAuth"
 
 const formSchema = z.object({
-  username: z.string().min(1, { message: "Username or phone is required" }),
+  username: z.string().min(1, { message: "Foydalanuvchi nomi yoki telefon majburiy" }),
   password: passwordSchema,
 }) satisfies z.ZodType<AccessToken>
 
@@ -41,7 +41,7 @@ export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
       {
-        title: "Log In - FastAPI Cloud",
+        title: "Kirish - FastAPI Cloud",
       },
     ],
   }),
@@ -72,7 +72,7 @@ function Login() {
           className="flex flex-col gap-6"
         >
           <div className="flex flex-col items-center gap-2 text-center">
-            <h1 className="text-2xl font-bold">Login to your account</h1>
+            <h1 className="text-2xl font-bold">Hisobingizga kiring</h1>
           </div>
 
           <div className="grid gap-4">
@@ -81,11 +81,11 @@ function Login() {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username or Phone</FormLabel>
+                  <FormLabel>Foydalanuvchi nomi yoki telefon</FormLabel>
                   <FormControl>
                     <Input
                       data-testid="phone-input"
-                      placeholder="username or +998901234567"
+                      placeholder="foydalanuvchi nomi yoki +998901234567"
                       type="text"
                       autoComplete="username"
                       {...field}
@@ -102,12 +102,12 @@ function Login() {
               render={({ field }) => (
                 <FormItem>
                   <div className="flex items-center">
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel>Parol</FormLabel>
                   </div>
                   <FormControl>
                     <PasswordInput
                       data-testid="password-input"
-                      placeholder="Password"
+                      placeholder="Parol"
                       {...field}
                     />
                   </FormControl>
@@ -117,7 +117,7 @@ function Login() {
             />
 
             <LoadingButton type="submit" loading={loginMutation.isPending}>
-              Log In
+              Kirish
             </LoadingButton>
           </div>
         </form>

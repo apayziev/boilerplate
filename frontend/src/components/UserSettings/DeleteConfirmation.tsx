@@ -17,7 +17,7 @@ const DeleteConfirmation = () => {
   const mutation = useMutation({
     mutationFn: () => UsersService.deleteUserMe(),
     onSuccess: () => {
-      showSuccessToast("Your account has been successfully deleted")
+      showSuccessToast("Hisobingiz muvaffaqiyatli o'chirildi")
       setOpen(false)
       logout()
     },
@@ -34,20 +34,21 @@ const DeleteConfirmation = () => {
         className="mt-3"
         onClick={() => setOpen(true)}
       >
-        Delete Account
+        Hisobni o'chirish
       </Button>
       <ConfirmDialog
         open={open}
         onOpenChange={setOpen}
-        title="Confirmation Required"
+        title="Tasdiqlash kerak"
         description={
           <>
-            All your account data will be <strong>permanently deleted.</strong>{" "}
-            If you are sure, please click <strong>"Delete"</strong> to proceed.
-            This action cannot be undone.
+            Hisobingizdagi barcha ma'lumotlar{" "}
+            <strong>butunlay o'chiriladi.</strong> Ishonchingiz komil bo'lsa,
+            davom etish uchun <strong>"O'chirish"</strong> tugmasini bosing. Bu
+            amalni qaytarib bo'lmaydi.
           </>
         }
-        confirmText="Delete"
+        confirmText="O'chirish"
         destructive
         loading={mutation.isPending}
         onConfirm={() => mutation.mutate()}

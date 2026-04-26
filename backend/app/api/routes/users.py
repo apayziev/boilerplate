@@ -20,9 +20,9 @@ class PaginatedResponse(BaseModel):
 async def _ensure_unique(db: SessionDep, *, phone: str | None, username: str | None, current: User) -> None:
     """Reject the update when another user already owns the requested phone or username."""
     if phone is not None and phone != current.phone and await crud_users.exists(db=db, phone=phone):
-        raise DuplicateValueException("Phone is already registered")
+        raise DuplicateValueException("Bu telefon allaqachon ro'yxatdan o'tgan")
     if username is not None and username != current.username and await crud_users.exists(db=db, username=username):
-        raise DuplicateValueException("Username not available")
+        raise DuplicateValueException("Bu foydalanuvchi nomi band")
 
 
 def _derive_username_from_phone(phone: str) -> str:
@@ -38,11 +38,11 @@ async def write_user(
 ) -> UserRead:
     """Create a new user (superuser only). If `username` is omitted, derive one from the phone digits."""
     if await crud_users.exists(db=db, phone=user.phone):
-        raise DuplicateValueException("Phone is already registered")
+        raise DuplicateValueException("Bu telefon allaqachon ro'yxatdan o'tgan")
 
     if user.username:
         if await crud_users.exists(db=db, username=user.username):
-            raise DuplicateValueException("Username not available")
+            raise DuplicateValueException("Bu foydalanuvchi nomi band")
     else:
         base_username = _derive_username_from_phone(user.phone)
         username = base_username
@@ -95,31 +95,31 @@ async def update_password_me(
     db: SessionDep,
 ) -> dict[str, str]:
     if not await verify_password(body.current_password, current_user.hashed_password):
-        raise ForbiddenException("Incorrect password")
+        raise ForbiddenException("Joriy parol noto'g'ri")
     if body.current_password == body.new_password:
-        raise DuplicateValueException("New password cannot be the same as the current password")
+        raise DuplicateValueException("Yangi parol joriy paroldan farq qilishi kerak")
 
     await crud_users.update(
         db=db, db_user=current_user, user_update={"hashed_password": get_password_hash(body.new_password)}
     )
-    return {"message": "Password updated successfully"}
+    return {"message": "Parol muvaffaqiyatli yangilandi"}
 
 
 @router.delete("/me", response_model=dict[str, str], operation_id="delete_user_me")
 async def delete_user_me(current_user: CurrentUser, db: SessionDep) -> dict[str, str]:
     if current_user.is_superuser:
         raise ForbiddenException(
-            "Superusers cannot delete themselves. Please ask another admin to delete your account."
+            "Adminlar o'z hisobini o'zlari o'chira olmaydilar. Iltimos, boshqa adminga murojaat qiling."
         )
     await crud_users.delete(db=db, id=current_user.id)
-    return {"message": "User deleted successfully"}
+    return {"message": "Foydalanuvchi muvaffaqiyatli o'chirildi"}
 
 
 @router.get("/{user_id}", response_model=UserRead, operation_id="read_user_by_id")
 async def read_user_by_id(user_id: int, db: SessionDep) -> UserRead:
     db_user = await crud_users.get(db=db, id=user_id)
     if db_user is None:
-        raise NotFoundException("User not found")
+        raise NotFoundException("Foydalanuvchi topilmadi")
     return UserRead.model_validate(db_user)
 
 
@@ -133,7 +133,7 @@ async def patch_user(
     """Update any user (superuser only). Self-updates should go through `PATCH /users/me`."""
     db_user = await crud_users.get(db=db, id=user_id)
     if db_user is None:
-        raise NotFoundException("User not found")
+        raise NotFoundException("Foydalanuvchi topilmadi")
 
     await _ensure_unique(db, phone=values.phone, username=values.username, current=db_user)
     updated_user = await crud_users.update(db=db, db_user=db_user, user_update=values.model_dump(exclude_unset=True))
@@ -149,12 +149,12 @@ async def erase_user(
     """Soft-delete a user. Allowed for the user themselves or any superuser."""
     db_user = await crud_users.get(db=db, id=user_id)
     if not db_user:
-        raise NotFoundException("User not found")
+        raise NotFoundException("Foydalanuvchi topilmadi")
     if not current_user.is_superuser and user_id != current_user.id:
         raise ForbiddenException()
 
     await crud_users.delete(db=db, id=user_id)
-    return {"message": "User deleted"}
+    return {"message": "Foydalanuvchi o'chirildi"}
 
 
 @router.delete("/db_user/{username}", operation_id="delete_db_user")
@@ -165,6 +165,6 @@ async def erase_db_user(
 ) -> dict[str, str]:
     """Hard-delete a user (superuser only)."""
     if not await crud_users.exists(db=db, username=username):
-        raise NotFoundException("User not found")
+        raise NotFoundException("Foydalanuvchi topilmadi")
     await crud_users.db_delete(db=db, username=username)
-    return {"message": "User deleted from the database"}
+    return {"message": "Foydalanuvchi ma'lumotlar bazasidan butunlay o'chirildi"}

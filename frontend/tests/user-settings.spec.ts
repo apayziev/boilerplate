@@ -3,13 +3,13 @@ import { createUser } from "./utils/privateApi.ts"
 import { randomPassword, randomPhone } from "./utils/random"
 import { logInUser, logOutUser } from "./utils/user"
 
-const tabs = ["My profile", "Password", "Danger zone"]
+const tabs = ["Profilim", "Parol", "Xavfli zona"]
 
 // User Information
 
 test("My profile tab is active by default", async ({ page }) => {
   await page.goto("/settings")
-  await expect(page.getByRole("tab", { name: "My profile" })).toHaveAttribute(
+  await expect(page.getByRole("tab", { name: "Profilim" })).toHaveAttribute(
     "aria-selected",
     "true",
   )
@@ -34,11 +34,11 @@ test.describe("Edit user full name and phone successfully", () => {
     await logInUser(page, phone, password)
 
     await page.goto("/settings")
-    await page.getByRole("tab", { name: "My profile" }).click()
-    await page.getByRole("button", { name: "Edit" }).click()
-    await page.getByLabel("Full name").fill(updatedName)
-    await page.getByRole("button", { name: "Save" }).click()
-    await expect(page.getByText("User updated successfully")).toBeVisible()
+    await page.getByRole("tab", { name: "Profilim" }).click()
+    await page.getByRole("button", { name: "Tahrirlash" }).click()
+    await page.getByLabel("To'liq ism").fill(updatedName)
+    await page.getByRole("button", { name: "Saqlash" }).click()
+    await expect(page.getByText("Foydalanuvchi muvaffaqiyatli yangilandi")).toBeVisible()
     await expect(
       page.locator("form").getByText(updatedName, { exact: true }),
     ).toBeVisible()
@@ -53,11 +53,11 @@ test.describe("Edit user full name and phone successfully", () => {
     await logInUser(page, phone, password)
 
     await page.goto("/settings")
-    await page.getByRole("tab", { name: "My profile" }).click()
-    await page.getByRole("button", { name: "Edit" }).click()
-    await page.getByLabel("Phone").fill(updatedPhone)
-    await page.getByRole("button", { name: "Save" }).click()
-    await expect(page.getByText("User updated successfully")).toBeVisible()
+    await page.getByRole("tab", { name: "Profilim" }).click()
+    await page.getByRole("button", { name: "Tahrirlash" }).click()
+    await page.getByLabel("Telefon").fill(updatedPhone)
+    await page.getByRole("button", { name: "Saqlash" }).click()
+    await expect(page.getByText("Foydalanuvchi muvaffaqiyatli yangilandi")).toBeVisible()
     await expect(
       page.locator("form").getByText(updatedPhone, { exact: true }),
     ).toBeVisible()
@@ -76,12 +76,12 @@ test.describe("Edit user with invalid data", () => {
     await logInUser(page, phone, password)
 
     await page.goto("/settings")
-    await page.getByRole("tab", { name: "My profile" }).click()
-    await page.getByRole("button", { name: "Edit" }).click()
-    await page.getByLabel("Phone").fill(invalidPhone)
+    await page.getByRole("tab", { name: "Profilim" }).click()
+    await page.getByRole("button", { name: "Tahrirlash" }).click()
+    await page.getByLabel("Telefon").fill(invalidPhone)
     await page.locator("body").click()
     await expect(
-      page.getByText("Phone must be in the form +998XXXXXXXXX"),
+      page.getByText("Telefon +998XXXXXXXXX formatida bo'lishi kerak"),
     ).toBeVisible()
   })
 
@@ -94,10 +94,10 @@ test.describe("Edit user with invalid data", () => {
     await logInUser(page, phone, password)
 
     await page.goto("/settings")
-    await page.getByRole("tab", { name: "My profile" }).click()
-    await page.getByRole("button", { name: "Edit" }).click()
-    await page.getByLabel("Full name").fill(updatedName)
-    await page.getByRole("button", { name: "Cancel" }).first().click()
+    await page.getByRole("tab", { name: "Profilim" }).click()
+    await page.getByRole("button", { name: "Tahrirlash" }).click()
+    await page.getByLabel("To'liq ism").fill(updatedName)
+    await page.getByRole("button", { name: "Bekor qilish" }).first().click()
     await expect(
       page.locator("form").getByText(user.name as string, { exact: true }),
     ).toBeVisible()
@@ -112,10 +112,10 @@ test.describe("Edit user with invalid data", () => {
     await logInUser(page, phone, password)
 
     await page.goto("/settings")
-    await page.getByRole("tab", { name: "My profile" }).click()
-    await page.getByRole("button", { name: "Edit" }).click()
-    await page.getByLabel("Phone").fill(updatedPhone)
-    await page.getByRole("button", { name: "Cancel" }).first().click()
+    await page.getByRole("tab", { name: "Profilim" }).click()
+    await page.getByRole("button", { name: "Tahrirlash" }).click()
+    await page.getByLabel("Telefon").fill(updatedPhone)
+    await page.getByRole("button", { name: "Bekor qilish" }).first().click()
     await expect(
       page.locator("form").getByText(phone, { exact: true }),
     ).toBeVisible()
@@ -136,12 +136,12 @@ test.describe("Change password successfully", () => {
     await logInUser(page, phone, password)
 
     await page.goto("/settings")
-    await page.getByRole("tab", { name: "Password" }).click()
+    await page.getByRole("tab", { name: "Parol" }).click()
     await page.getByTestId("current-password-input").fill(password)
     await page.getByTestId("new-password-input").fill(NewPassword)
     await page.getByTestId("confirm-password-input").fill(NewPassword)
-    await page.getByRole("button", { name: "Update Password" }).click()
-    await expect(page.getByText("Password updated successfully")).toBeVisible()
+    await page.getByRole("button", { name: "Parolni yangilash" }).click()
+    await expect(page.getByText("Parol muvaffaqiyatli yangilandi")).toBeVisible()
 
     await logOutUser(page)
     await logInUser(page, phone, NewPassword)
@@ -160,13 +160,13 @@ test.describe("Change password with invalid data", () => {
     await logInUser(page, phone, password)
 
     await page.goto("/settings")
-    await page.getByRole("tab", { name: "Password" }).click()
+    await page.getByRole("tab", { name: "Parol" }).click()
     await page.getByTestId("current-password-input").fill(password)
     await page.getByTestId("new-password-input").fill(weakPassword)
     await page.getByTestId("confirm-password-input").fill(weakPassword)
-    await page.getByRole("button", { name: "Update Password" }).click()
+    await page.getByRole("button", { name: "Parolni yangilash" }).click()
     await expect(
-      page.getByText("Password must be at least 8 characters"),
+      page.getByText("Parol kamida 8 ta belgidan iborat bo'lishi kerak"),
     ).toBeVisible()
   })
 
@@ -182,12 +182,12 @@ test.describe("Change password with invalid data", () => {
     await logInUser(page, phone, password)
 
     await page.goto("/settings")
-    await page.getByRole("tab", { name: "Password" }).click()
+    await page.getByRole("tab", { name: "Parol" }).click()
     await page.getByTestId("current-password-input").fill(password)
     await page.getByTestId("new-password-input").fill(newPassword)
     await page.getByTestId("confirm-password-input").fill(confirmPassword)
-    await page.getByRole("button", { name: "Update Password" }).click()
-    await expect(page.getByText("The passwords don't match")).toBeVisible()
+    await page.getByRole("button", { name: "Parolni yangilash" }).click()
+    await expect(page.getByText("Parollar mos emas")).toBeVisible()
   })
 
   test("Current password and new password are the same", async ({ page }) => {
@@ -198,13 +198,13 @@ test.describe("Change password with invalid data", () => {
     await logInUser(page, phone, password)
 
     await page.goto("/settings")
-    await page.getByRole("tab", { name: "Password" }).click()
+    await page.getByRole("tab", { name: "Parol" }).click()
     await page.getByTestId("current-password-input").fill(password)
     await page.getByTestId("new-password-input").fill(password)
     await page.getByTestId("confirm-password-input").fill(password)
-    await page.getByRole("button", { name: "Update Password" }).click()
+    await page.getByRole("button", { name: "Parolni yangilash" }).click()
     await expect(
-      page.getByText("New password cannot be the same as the current password"),
+      page.getByText("Yangi parol joriy paroldan farq qilishi kerak"),
     ).toBeVisible()
   })
 })

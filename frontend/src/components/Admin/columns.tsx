@@ -12,7 +12,7 @@ export type UserTableData = UserRead & {
 export const columns: ColumnDef<UserTableData>[] = [
   {
     accessorKey: "name",
-    header: "Full Name",
+    header: "To'liq ism",
     cell: ({ row }) => {
       const fullName = row.original.name
       return (
@@ -20,11 +20,11 @@ export const columns: ColumnDef<UserTableData>[] = [
           <span
             className={cn("font-medium", !fullName && "text-muted-foreground")}
           >
-            {fullName || "N/A"}
+            {fullName || "—"}
           </span>
           {row.original.isCurrentUser && (
             <Badge variant="outline" className="text-xs">
-              You
+              Siz
             </Badge>
           )}
         </div>
@@ -33,23 +33,23 @@ export const columns: ColumnDef<UserTableData>[] = [
   },
   {
     accessorKey: "phone",
-    header: "Phone",
+    header: "Telefon",
     cell: ({ row }) => (
       <span className="text-muted-foreground">{row.original.phone}</span>
     ),
   },
   {
     accessorKey: "is_superuser",
-    header: "Role",
+    header: "Rol",
     cell: ({ row }) => (
       <Badge variant={row.original.is_superuser ? "default" : "secondary"}>
-        {row.original.is_superuser ? "Superuser" : "User"}
+        {row.original.is_superuser ? "Admin" : "Foydalanuvchi"}
       </Badge>
     ),
   },
   {
     accessorKey: "is_active",
-    header: "Status",
+    header: "Holat",
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
         <span
@@ -59,14 +59,14 @@ export const columns: ColumnDef<UserTableData>[] = [
           )}
         />
         <span className={row.original.is_active ? "" : "text-muted-foreground"}>
-          {row.original.is_active ? "Active" : "Inactive"}
+          {row.original.is_active ? "Faol" : "Faol emas"}
         </span>
       </div>
     ),
   },
   {
     id: "actions",
-    header: () => <span className="sr-only">Actions</span>,
+    header: () => <span className="sr-only">Amallar</span>,
     cell: ({ row }) => (
       <div className="flex justify-end">
         <UserActionsMenu user={row.original} />

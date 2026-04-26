@@ -60,7 +60,7 @@ async def test_user_change_password_wrong_current(client: AsyncClient, db):
         json={"current_password": "WrongPassword!", "new_password": "NewPassword123!"},
     )
     assert r_update.status_code == 403
-    assert r_update.json()["detail"] == "Incorrect password"
+    assert r_update.json()["detail"] == "Joriy parol noto'g'ri"
 
 
 @pytest.mark.asyncio
@@ -80,7 +80,7 @@ async def test_user_change_password_same_password(client: AsyncClient, db):
         json={"current_password": password, "new_password": password},
     )
     assert r_update.status_code == 409
-    assert r_update.json()["detail"] == "New password cannot be the same as the current password"
+    assert r_update.json()["detail"] == "Yangi parol joriy paroldan farq qilishi kerak"
 
 
 @pytest.mark.asyncio
@@ -97,7 +97,7 @@ async def test_delete_user_me(client: AsyncClient, db):
 
     r_delete = await client.delete("/api/v1/users/me", headers=headers)
     assert r_delete.status_code == 200
-    assert r_delete.json()["message"] == "User deleted successfully"
+    assert r_delete.json()["message"] == "Foydalanuvchi muvaffaqiyatli o'chirildi"
 
     user_in_db = await crud_users.get(db, id=user_id, is_deleted=True)
     assert user_in_db is not None

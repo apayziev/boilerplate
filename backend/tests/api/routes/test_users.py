@@ -30,7 +30,7 @@ async def test_create_user_as_normal_user_fails(client: AsyncClient, normal_user
     }
     response = await client.post("/api/v1/users/", json=data, headers=normal_user_token_headers)
     assert response.status_code == 403
-    assert response.json()["detail"] == "You do not have enough privileges."
+    assert response.json()["detail"] == "Sizda yetarli huquq yo'q."
 
 
 @pytest.mark.asyncio
