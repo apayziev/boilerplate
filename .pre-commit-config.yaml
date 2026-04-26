@@ -30,3 +30,10 @@ repos:
         language: system
         types: [python]
         pass_filenames: false
+
+      - id: biome-check
+        name: biome check (frontend)
+        entry: bash -c 'cd frontend && npx --no-install biome check --no-errors-on-unmatched --files-ignore-unknown=true ./'
+        language: system
+        files: ^frontend/.*\.(ts|tsx|js|jsx|json|css)$
+        pass_filenames: false
