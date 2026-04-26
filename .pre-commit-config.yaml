@@ -10,27 +10,25 @@ repos:
         args:
           - --unsafe
 
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.13.0
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
   - repo: local
     hooks:
-      - id: ruff-check
-        name: ruff check
-        entry: backend/.venv/bin/python -m ruff check
-        language: system
-        types: [python]
-
-      - id: ruff-format
-        name: ruff format
-        entry: backend/.venv/bin/python -m ruff format --check
-        language: system
-        types: [python]
-
+      # mypy needs the project's installed environment (it imports app modules), so it stays as a
+      # local hook. `make install` (uv sync) is a setup prerequisite — already part of `make setup`.
       - id: mypy
         name: mypy
-        entry: backend/.venv/bin/python -m mypy backend/app
+        entry: uv --project backend run mypy backend/app
         language: system
         types: [python]
         pass_filenames: false
 
+      # biome runs from `frontend/` so it picks up `biome.json`. `npm install` is a setup prereq.
       - id: biome-check
         name: biome check (frontend)
         entry: bash -c 'cd frontend && npx --no-install biome check --no-errors-on-unmatched --files-ignore-unknown=true ./'

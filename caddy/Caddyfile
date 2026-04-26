@@ -1,4 +1,8 @@
-:80 {
+# `SITE_ADDRESS` controls the listener and TLS behaviour:
+#   - default `:80`           → plain HTTP, suitable for local containers behind another proxy.
+#   - `your-domain.com`       → Caddy provisions a Let's Encrypt cert automatically, listens on :443.
+#   - `your-domain.com:8443`  → custom port, Caddy still provisions TLS for the host name.
+{$SITE_ADDRESS::80} {
 	# Security headers
 	header {
 		X-Frame-Options SAMEORIGIN
@@ -29,6 +33,11 @@
 	}
 
 	handle /openapi.json {
+		reverse_proxy api:8000
+	}
+
+	# Prometheus metrics — restrict here when exposing publicly.
+	handle /metrics {
 		reverse_proxy api:8000
 	}
 
