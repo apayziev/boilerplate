@@ -12,7 +12,7 @@ async def test_crud_get(db):
     fetched_user = await crud_users.get(db, id=user.id)
     assert fetched_user is not None
     assert fetched_user.id == user.id
-    assert fetched_user.email == user.email
+    assert fetched_user.phone == user.phone
 
 
 @pytest.mark.asyncio

@@ -117,7 +117,7 @@ lib/                # Utilities
 4. If refresh also fails, localStorage is cleared and user is redirected to `/login`
 5. `POST /api/v1/logout` clears the refresh cookie server-side
 
-JWT payload: `{sub: username_or_email, exp: ..., token_type: "access" | "refresh"}`
+JWT payload: `{sub: username_or_phone, exp: ..., token_type: "access" | "refresh"}`
 
 ### API → Frontend Type Safety
 
@@ -134,7 +134,7 @@ Copy `.env.example` to `.env`. Key variables:
 | `REDIS_HOST/PORT`               | Redis connection                           |
 | `ENABLE_REDIS_QUEUE`            | Toggle ARQ background jobs                 |
 | `ENABLE_REDIS_RATE_LIMIT`       | Toggle rate limiting                       |
-| `ADMIN_EMAIL/USERNAME/PASSWORD` | Initial superuser (created on startup)     |
+| `ADMIN_PHONE/USERNAME/PASSWORD` | Initial superuser (created on startup)     |
 | `VITE_API_URL`                  | Frontend API base URL                      |
 
 For Docker local dev, set `POSTGRES_SERVER=db` and `REDIS_HOST=redis`.

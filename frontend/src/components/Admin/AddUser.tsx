@@ -29,12 +29,12 @@ import {
 import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
-import { emailSchema, optionalNameSchema, passwordSchema } from "@/lib/validation"
+import { phoneSchema, optionalNameSchema, passwordSchema } from "@/lib/validation"
 import { handleError } from "@/utils"
 
 const formSchema = z
   .object({
-    email: emailSchema,
+    phone: phoneSchema,
     name: optionalNameSchema,
     password: passwordSchema,
     confirm_password: z
@@ -60,7 +60,7 @@ const AddUser = () => {
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
-      email: "",
+      phone: "",
       name: "",
       password: "",
       confirm_password: "",
@@ -107,16 +107,16 @@ const AddUser = () => {
             <div className="grid gap-4 py-4">
               <FormField
                 control={form.control}
-                name="email"
+                name="phone"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Email <span className="text-destructive">*</span>
+                      Phone <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Email"
-                        type="email"
+                        placeholder="+998901234567"
+                        type="tel"
                         {...field}
                         required
                       />

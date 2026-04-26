@@ -29,12 +29,12 @@ import {
 import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
 import useCustomToast from "@/hooks/useCustomToast"
-import { emailSchema, optionalNameSchema, optionalPasswordSchema } from "@/lib/validation"
+import { phoneSchema, optionalNameSchema, optionalPasswordSchema } from "@/lib/validation"
 import { handleError } from "@/utils"
 
 const formSchema = z
   .object({
-    email: emailSchema,
+    phone: phoneSchema,
     name: optionalNameSchema,
     password: optionalPasswordSchema,
     confirm_password: z.string().optional(),
@@ -63,7 +63,7 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
-      email: user.email,
+      phone: user.phone,
       name: user.name ?? undefined,
       is_superuser: user.is_superuser,
       is_active: user.is_active,
@@ -89,7 +89,7 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
 
   const onSubmit = (data: FormData) => {
     const payload: UserAdminUpdate = {
-      email: data.email,
+      phone: data.phone,
       name: data.name,
       is_superuser: data.is_superuser,
       is_active: data.is_active,
@@ -121,16 +121,16 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
             <div className="grid gap-4 py-4">
               <FormField
                 control={form.control}
-                name="email"
+                name="phone"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Email <span className="text-destructive">*</span>
+                      Phone <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Email"
-                        type="email"
+                        placeholder="+998901234567"
+                        type="tel"
                         {...field}
                         required
                       />

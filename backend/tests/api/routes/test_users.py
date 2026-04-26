@@ -8,7 +8,7 @@ from app.models.user import User
 @pytest.mark.asyncio
 async def test_create_user(client: AsyncClient, superuser_token_headers):
     data = {
-        "email": "testcreate@example.com",
+        "phone": "+998900000200",
         "password": "Password123!",
         "name": "Test Create",
         "username": "testcreate",
@@ -16,7 +16,7 @@ async def test_create_user(client: AsyncClient, superuser_token_headers):
     response = await client.post("/api/v1/users/", json=data, headers=superuser_token_headers)
     assert response.status_code == 201
     content = response.json()
-    assert content["email"] == data["email"]
+    assert content["phone"] == data["phone"]
     assert "id" in content
     assert content["name"] == data["name"]
 
@@ -24,7 +24,7 @@ async def test_create_user(client: AsyncClient, superuser_token_headers):
 @pytest.mark.asyncio
 async def test_create_user_as_normal_user_fails(client: AsyncClient, normal_user_token_headers):
     data = {
-        "email": "testadminfail@example.com",
+        "phone": "+998900000201",
         "password": "Password123!",
         "name": "Test Admin Fail",
     }
@@ -37,7 +37,7 @@ async def test_create_user_as_normal_user_fails(client: AsyncClient, normal_user
 async def test_read_users_me(client: AsyncClient, normal_user_token_headers):
     response = await client.get("/api/v1/users/me", headers=normal_user_token_headers)
     assert response.status_code == 200
-    assert "email" in response.json()
+    assert "phone" in response.json()
 
 
 @pytest.mark.asyncio
@@ -65,7 +65,6 @@ async def test_normal_user_cannot_escalate_to_superuser_me(client: AsyncClient, 
     response = await client.patch("/api/v1/users/me", json=update_data, headers=normal_user_token_headers)
     assert response.status_code == 200
     content = response.json()
-
     assert content["name"] == "Hackerman"
     assert content["is_superuser"] is False
 
@@ -75,7 +74,6 @@ async def test_normal_user_cannot_use_admin_endpoint(client: AsyncClient, normal
     me = await client.get("/api/v1/users/me", headers=normal_user_token_headers)
     user_id = me.json()["id"]
 
-    # PATCH /users/{id} is now superuser-only — non-superusers must go through /users/me.
     update_data = {"is_superuser": True, "is_active": False}
     response = await client.patch(f"/api/v1/users/{user_id}", json=update_data, headers=normal_user_token_headers)
     assert response.status_code == 403
@@ -85,7 +83,7 @@ async def test_normal_user_cannot_use_admin_endpoint(client: AsyncClient, normal
 async def test_superuser_can_use_admin_endpoint(client: AsyncClient, superuser_token_headers, db):
     from tests.helpers.generators import create_user
 
-    target = await create_user(db, email="target@example.com")
+    target = await create_user(db, phone="+998900000202")
     update_data = {"is_superuser": True, "name": "Promoted"}
     response = await client.patch(f"/api/v1/users/{target.id}", json=update_data, headers=superuser_token_headers)
     assert response.status_code == 200
@@ -96,18 +94,16 @@ async def test_superuser_can_use_admin_endpoint(client: AsyncClient, superuser_t
 
 @pytest.mark.asyncio
 async def test_delete_user(client: AsyncClient, db):
-    # Need a fresh user for deletion test
     from app.core.security import create_access_token
     from tests.helpers.generators import create_user
 
-    user = await create_user(db, email="todelete@example.com")
-    token = create_access_token(data={"sub": user.email})
+    user = await create_user(db, phone="+998900000203")
+    token = create_access_token(data={"sub": user.phone})
     headers = {"Authorization": f"Bearer {token}"}
 
     response = await client.delete(f"/api/v1/users/{user.id}", headers=headers)
     assert response.status_code == 200
 
-    # Verify deleted
     stmt = select(User).where(User.id == user.id)
     result = await db.execute(stmt)
     db_user = result.scalar_one_or_none()

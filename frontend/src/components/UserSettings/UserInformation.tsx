@@ -19,12 +19,12 @@ import { LoadingButton } from "@/components/ui/loading-button"
 import useCurrentUser from "@/hooks/useCurrentUser"
 import useCustomToast from "@/hooks/useCustomToast"
 import { cn } from "@/lib/utils"
-import { emailSchema, optionalNameSchema } from "@/lib/validation"
+import { phoneSchema, optionalNameSchema } from "@/lib/validation"
 import { handleError } from "@/utils"
 
 const formSchema = z.object({
   name: optionalNameSchema,
-  email: emailSchema,
+  phone: phoneSchema,
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -41,7 +41,7 @@ const UserInformation = () => {
     criteriaMode: "all",
     defaultValues: {
       name: currentUser?.name ?? undefined,
-      email: currentUser?.email,
+      phone: currentUser?.phone,
     },
   })
 
@@ -69,8 +69,8 @@ const UserInformation = () => {
     if (data.name !== currentUser?.name) {
       updateData.name = data.name
     }
-    if (data.email !== currentUser?.email) {
-      updateData.email = data.email
+    if (data.phone !== currentUser?.phone) {
+      updateData.phone = data.phone
     }
 
     mutation.mutate(updateData)
@@ -119,19 +119,19 @@ const UserInformation = () => {
 
           <FormField
             control={form.control}
-            name="email"
+            name="phone"
             render={({ field }) =>
               editMode ? (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Phone</FormLabel>
                   <FormControl>
-                    <Input type="email" {...field} />
+                    <Input type="tel" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               ) : (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Phone</FormLabel>
                   <p className="py-2 truncate max-w-sm">{field.value}</p>
                 </FormItem>
               )

@@ -1,12 +1,12 @@
 import { expect, type Page, test } from "@playwright/test"
 import { firstSuperuser, firstSuperuserPassword } from "./config.ts"
 import { createUser } from "./utils/privateApi.ts"
-import { randomEmail, randomPassword } from "./utils/random.ts"
+import { randomPassword, randomPhone } from "./utils/random.ts"
 
 test.use({ storageState: { cookies: [], origins: [] } })
 
-const fillForm = async (page: Page, email: string, password: string) => {
-  await page.getByTestId("email-input").fill(email)
+const fillForm = async (page: Page, phone: string, password: string) => {
+  await page.getByTestId("phone-input").fill(phone)
   await page.getByTestId("password-input").fill(password)
 }
 
@@ -20,7 +20,7 @@ const verifyInput = async (page: Page, testId: string) => {
 test("Inputs are visible, empty and editable", async ({ page }) => {
   await page.goto("/login")
 
-  await verifyInput(page, "email-input")
+  await verifyInput(page, "phone-input")
   await verifyInput(page, "password-input")
 })
 
@@ -30,8 +30,7 @@ test("Log In button is visible", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Log In" })).toBeVisible()
 })
 
-
-test("Log in with valid email and password ", async ({ page }) => {
+test("Log in with valid phone and password", async ({ page }) => {
   await page.goto("/login")
 
   await fillForm(page, firstSuperuser, firstSuperuserPassword)
@@ -50,7 +49,7 @@ test("Log in with empty username field", async ({ page }) => {
   await fillForm(page, "", firstSuperuserPassword)
   await page.getByRole("button", { name: "Log In" }).click()
 
-  await expect(page.getByText("Username or email is required")).toBeVisible()
+  await expect(page.getByText("Username or phone is required")).toBeVisible()
 })
 
 test("Log in with invalid password", async ({ page }) => {
@@ -60,19 +59,18 @@ test("Log in with invalid password", async ({ page }) => {
   await fillForm(page, firstSuperuser, password)
   await page.getByRole("button", { name: "Log In" }).click()
 
-  await expect(page.getByText("Wrong username, email or password.")).toBeVisible()
+  await expect(
+    page.getByText("Wrong username, phone, or password."),
+  ).toBeVisible()
 })
 
-// Log out
-
 test("Successful log out", async ({ page }) => {
-  // Use a fresh user so logout does not increment the shared admin's token_version
-  const email = randomEmail()
+  const phone = randomPhone()
   const password = randomPassword()
-  await createUser({ email, password })
+  await createUser({ phone, password })
 
   await page.goto("/login")
-  await fillForm(page, email, password)
+  await fillForm(page, phone, password)
   await page.getByRole("button", { name: "Log In" }).click()
   await page.waitForURL("/")
   await expect(
@@ -85,13 +83,12 @@ test("Successful log out", async ({ page }) => {
 })
 
 test("Logged-out user cannot access protected routes", async ({ page }) => {
-  // Use a fresh user so logout does not increment the shared admin's token_version
-  const email = randomEmail()
+  const phone = randomPhone()
   const password = randomPassword()
-  await createUser({ email, password })
+  await createUser({ phone, password })
 
   await page.goto("/login")
-  await fillForm(page, email, password)
+  await fillForm(page, phone, password)
   await page.getByRole("button", { name: "Log In" }).click()
   await page.waitForURL("/")
   await expect(

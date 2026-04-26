@@ -32,10 +32,10 @@ export const columns: ColumnDef<UserTableData>[] = [
     },
   },
   {
-    accessorKey: "email",
-    header: "Email",
+    accessorKey: "phone",
+    header: "Phone",
     cell: ({ row }) => (
-      <span className="text-muted-foreground">{row.original.email}</span>
+      <span className="text-muted-foreground">{row.original.phone}</span>
     ),
   },
   {

@@ -21,7 +21,7 @@ import { PasswordInput } from "@/components/ui/password-input"
 import useAuth from "@/hooks/useAuth"
 
 const formSchema = z.object({
-  username: z.string().min(1, { message: "Username or email is required" }),
+  username: z.string().min(1, { message: "Username or phone is required" }),
   password: passwordSchema,
 }) satisfies z.ZodType<AccessToken>
 
@@ -81,11 +81,11 @@ function Login() {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username or Email</FormLabel>
+                  <FormLabel>Username or Phone</FormLabel>
                   <FormControl>
                     <Input
-                      data-testid="email-input"
-                      placeholder="username or user@example.com"
+                      data-testid="phone-input"
+                      placeholder="username or +998901234567"
                       type="text"
                       autoComplete="username"
                       {...field}

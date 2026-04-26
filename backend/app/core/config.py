@@ -1,5 +1,5 @@
 import os
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import SecretStr, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -7,11 +7,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # Defaults referenced both by `Settings` field defaults and by the production-readiness validator below.
 _DEFAULT_SECRET_KEY = "secret-key-change-in-production"
 _DEFAULT_ADMIN_PASSWORD = "!Ch4ng3Th1sP4ssW0rd!"
-_DEFAULT_ADMIN_EMAIL = "admin@example.com"
+_DEFAULT_ADMIN_PHONE = "+998901234567"
 _DEFAULT_POSTGRES_PASSWORD = "postgres"
 
 
-class EnvironmentOption(str, Enum):
+class EnvironmentOption(StrEnum):
     LOCAL = "local"
     STAGING = "staging"
     PRODUCTION = "production"
@@ -51,7 +51,7 @@ class Settings(BaseSettings):
 
     # === First admin user (created on startup) ===
     ADMIN_NAME: str = "admin"
-    ADMIN_EMAIL: str = _DEFAULT_ADMIN_EMAIL
+    ADMIN_PHONE: str = _DEFAULT_ADMIN_PHONE
     ADMIN_USERNAME: str = "admin"
     ADMIN_PASSWORD: str = _DEFAULT_ADMIN_PASSWORD
 
@@ -120,8 +120,8 @@ def _validate_production_settings(s: Settings) -> None:
         problems.append("ADMIN_PASSWORD is the default placeholder")
     if s.POSTGRES_PASSWORD == _DEFAULT_POSTGRES_PASSWORD:
         problems.append("POSTGRES_PASSWORD is the default placeholder")
-    if s.ADMIN_EMAIL == _DEFAULT_ADMIN_EMAIL:
-        problems.append("ADMIN_EMAIL is the default placeholder")
+    if s.ADMIN_PHONE == _DEFAULT_ADMIN_PHONE:
+        problems.append("ADMIN_PHONE is the default placeholder")
     if problems:
         raise RuntimeError("Refusing to boot in production with insecure defaults: " + "; ".join(problems))
 

@@ -54,9 +54,11 @@ async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Annotated[AsyncSession, Depends(async_get_db)],
 ) -> dict[str, str]:
-    user = await crud_users.authenticate(db=db, username_or_email=form_data.username, password=form_data.password)
+    user = await crud_users.authenticate(
+        db=db, username_or_phone=form_data.username, password=form_data.password
+    )
     if not user:
-        raise UnauthorizedException("Wrong username, email or password.")
+        raise UnauthorizedException("Wrong username, phone, or password.")
     if not user.is_active:
         raise UnauthorizedException("Inactive user")
 
@@ -78,7 +80,7 @@ async def refresh_access_token(
     if not token_data:
         raise UnauthorizedException("Invalid refresh token.")
 
-    user = await crud_users.get_by_login(db=db, identifier=token_data.username_or_email)
+    user = await crud_users.get_by_login(db=db, identifier=token_data.username_or_phone)
     if not user or user.token_version != token_data.token_version:
         raise UnauthorizedException("Token has been revoked.")
 

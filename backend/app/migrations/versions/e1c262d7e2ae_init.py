@@ -25,7 +25,7 @@ def upgrade() -> None:
         "user",
         sa.Column("name", sa.String(length=30), nullable=True),
         sa.Column("username", sa.String(length=20), nullable=False),
-        sa.Column("email", sa.String(length=50), nullable=False),
+        sa.Column("phone", sa.String(length=13), nullable=False),
         sa.Column("hashed_password", sa.String(), nullable=False),
         sa.Column("profile_image_url", sa.String(), nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False),
@@ -42,7 +42,7 @@ def upgrade() -> None:
         sa.Column("is_deleted", sa.Boolean(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
-    op.create_index(op.f("ix_user_email"), "user", ["email"], unique=True)
+    op.create_index(op.f("ix_user_phone"), "user", ["phone"], unique=True)
     op.create_index(op.f("ix_user_is_deleted"), "user", ["is_deleted"], unique=False)
     op.create_index(op.f("ix_user_username"), "user", ["username"], unique=True)
     op.create_table(
@@ -72,6 +72,6 @@ def downgrade() -> None:
     op.drop_table("item")
     op.drop_index(op.f("ix_user_username"), table_name="user")
     op.drop_index(op.f("ix_user_is_deleted"), table_name="user")
-    op.drop_index(op.f("ix_user_email"), table_name="user")
+    op.drop_index(op.f("ix_user_phone"), table_name="user")
     op.drop_table("user")
     # ### end Alembic commands ###

@@ -1,5 +1,10 @@
-export const randomEmail = () =>
-  `test_${Math.random().toString(36).substring(7)}@example.com`
+/** Generate a unique +998 phone for test fixtures. */
+export const randomPhone = () => {
+  const tail = Math.floor(Math.random() * 1_000_000_000)
+    .toString()
+    .padStart(9, "0")
+  return `+998${tail}`
+}
 
 export const randomTeamName = () =>
   `Team ${Math.random().toString(36).substring(7)}`

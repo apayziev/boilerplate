@@ -28,7 +28,7 @@ async def _resolve_user(db: AsyncSession, token: str) -> User | None:
     token_data = await verify_token(token, TokenType.ACCESS, db)
     if token_data is None:
         return None
-    user = await crud_users.get_by_login(db=db, identifier=token_data.username_or_email)
+    user = await crud_users.get_by_login(db=db, identifier=token_data.username_or_phone)
     if user is None or not user.is_active or user.token_version != token_data.token_version:
         return None
     return user

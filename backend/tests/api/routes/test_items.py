@@ -167,11 +167,11 @@ async def test_normal_user_cannot_see_others_items(client: AsyncClient, superuse
     from tests.helpers.generators import create_user
 
     # Create two users
-    user1 = await create_user(db, email="user1@example.com")
-    user2 = await create_user(db, email="user2@example.com")
+    user1 = await create_user(db, phone="+998900000400")
+    user2 = await create_user(db, phone="+998900000401")
 
-    token1 = create_access_token(data={"sub": user1.email})
-    token2 = create_access_token(data={"sub": user2.email})
+    token1 = create_access_token(data={"sub": user1.phone})
+    token2 = create_access_token(data={"sub": user2.phone})
     headers1 = {"Authorization": f"Bearer {token1}"}
     headers2 = {"Authorization": f"Bearer {token2}"}
 
@@ -192,11 +192,11 @@ async def test_normal_user_cannot_update_others_items(client: AsyncClient, db):
     from tests.helpers.generators import create_user
 
     # Create two users
-    user1 = await create_user(db, email="owner@example.com")
-    user2 = await create_user(db, email="intruder@example.com")
+    user1 = await create_user(db, phone="+998900000410")
+    user2 = await create_user(db, phone="+998900000411")
 
-    token1 = create_access_token(data={"sub": user1.email})
-    token2 = create_access_token(data={"sub": user2.email})
+    token1 = create_access_token(data={"sub": user1.phone})
+    token2 = create_access_token(data={"sub": user2.phone})
     headers1 = {"Authorization": f"Bearer {token1}"}
     headers2 = {"Authorization": f"Bearer {token2}"}
 
@@ -218,11 +218,11 @@ async def test_normal_user_cannot_delete_others_items(client: AsyncClient, db):
     from tests.helpers.generators import create_user
 
     # Create two users
-    user1 = await create_user(db, email="itemowner@example.com")
-    user2 = await create_user(db, email="deleter@example.com")
+    user1 = await create_user(db, phone="+998900000420")
+    user2 = await create_user(db, phone="+998900000421")
 
-    token1 = create_access_token(data={"sub": user1.email})
-    token2 = create_access_token(data={"sub": user2.email})
+    token1 = create_access_token(data={"sub": user1.phone})
+    token2 = create_access_token(data={"sub": user2.phone})
     headers1 = {"Authorization": f"Bearer {token1}"}
     headers2 = {"Authorization": f"Bearer {token2}"}
 

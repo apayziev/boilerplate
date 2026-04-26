@@ -1,5 +1,5 @@
 from datetime import UTC, datetime, timedelta
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 import bcrypt
@@ -25,7 +25,7 @@ REFRESH_COOKIE_NAME = "refresh_token"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/login/access-token")
 
 
-class TokenType(str, Enum):
+class TokenType(StrEnum):
     ACCESS = "access"
     REFRESH = "refresh"
 
@@ -59,11 +59,11 @@ async def verify_token(token: str, expected_token_type: TokenType, db: AsyncSess
     except jwt.PyJWTError:
         return None
 
-    username_or_email = payload.get("sub")
-    if username_or_email is None or payload.get("token_type") != expected_token_type.value:
+    subject = payload.get("sub")
+    if subject is None or payload.get("token_type") != expected_token_type.value:
         return None
 
-    return TokenData(username_or_email=username_or_email, token_version=payload.get("token_version", 0))
+    return TokenData(username_or_phone=subject, token_version=payload.get("token_version", 0))
 
 
 def _is_secure_environment() -> bool:
