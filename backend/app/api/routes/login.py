@@ -17,10 +17,14 @@ from app.core.security import (
     set_auth_cookie,
     verify_token,
 )
+from app.core.utils.rate_limit import RateLimit
 from app.crud import crud_users
 from app.schemas.auth import Token
 
 router = APIRouter(prefix="/login", tags=["login"])
+
+# Brute-force defence: 5 attempts per IP per 5-minute window.
+_LOGIN_RATE_LIMIT = RateLimit(limit=5, period=300)
 
 ACCESS_MAX_AGE = ACCESS_TOKEN_EXPIRE_MINUTES * 60
 REFRESH_MAX_AGE = REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
@@ -36,7 +40,12 @@ def _issue_token_pair(response: Response, username: str, token_version: int) -> 
     return access_token
 
 
-@router.post("/access-token", response_model=Token, operation_id="login_access_token")
+@router.post(
+    "/access-token",
+    response_model=Token,
+    operation_id="login_access_token",
+    dependencies=[Depends(_LOGIN_RATE_LIMIT)],
+)
 async def login_for_access_token(
     response: Response,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
