@@ -1,5 +1,4 @@
-from datetime import datetime
-from typing import Annotated, Self
+from typing import Annotated
 
 from pydantic import (
     AliasChoices,
@@ -9,61 +8,11 @@ from pydantic import (
     EmailStr,
     Field,
     field_validator,
-    model_validator,
 )
-
-from .base import PersistentDeletion, TimestampSchema
-
-
-class UserBase(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
-
-    name: Annotated[
-        str | None,
-        Field(
-            min_length=2,
-            max_length=30,
-            examples=["User Userson"],
-            validation_alias=AliasChoices("name", "full_name"),
-            serialization_alias="full_name",
-            default=None,
-        ),
-    ]
-    username: Annotated[
-        str | None,
-        Field(
-            min_length=2,
-            max_length=20,
-            pattern=r"^[a-z0-9]+$",
-            examples=["userson"],
-            default=None,
-        ),
-    ]
-    email: Annotated[EmailStr, Field(examples=["user.userson@example.com"])]
-
-
-class User(TimestampSchema, UserBase, PersistentDeletion):
-    profile_image_url: Annotated[str, Field(default="https://www.profileimageurl.com")]
-    hashed_password: str
-    is_superuser: bool = False
-    is_active: bool = True
-
-
-class UserRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
-
-    id: Annotated[str, BeforeValidator(lambda v: str(v)), Field(examples=["1"])]
-
-    full_name: Annotated[str, Field(min_length=2, max_length=30, examples=["User Userson"], validation_alias="name")]
-    username: Annotated[str, Field(min_length=2, max_length=20, pattern=r"^[a-z0-9]+$", examples=["userson"])]
-    email: Annotated[EmailStr, Field(examples=["user.userson@example.com"])]
-    profile_image_url: str
-    is_active: bool
-    is_superuser: bool
 
 
 def validate_password_strength(v: str) -> str:
-    """Validate password has uppercase, lowercase, digit, and special character."""
+    """Reject weak passwords. Required: 8+ chars, lowercase, uppercase, digit, special."""
     if len(v) < 8:
         raise ValueError("Password must be at least 8 characters")
     if not any(c.islower() for c in v):
@@ -77,11 +26,51 @@ def validate_password_strength(v: str) -> str:
     return v
 
 
+_NAME_FIELD = Field(
+    min_length=2,
+    max_length=30,
+    examples=["User Userson"],
+    validation_alias=AliasChoices("name", "full_name"),
+    serialization_alias="full_name",
+    default=None,
+)
+_USERNAME_FIELD = Field(min_length=2, max_length=20, pattern=r"^[a-z0-9]+$", examples=["userson"], default=None)
+_EMAIL_FIELD = Field(examples=["user.userson@example.com"])
+_PROFILE_IMAGE_FIELD = Field(
+    pattern=r"^(https?|ftp)://[^\s/$.?#].[^\s]*$",
+    examples=["https://www.profileimageurl.com"],
+    default=None,
+)
+
+
+class UserBase(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    name: Annotated[str | None, _NAME_FIELD]
+    username: Annotated[str | None, _USERNAME_FIELD]
+    email: Annotated[EmailStr, _EMAIL_FIELD]
+
+
+class UserRead(BaseModel):
+    """Public-facing user representation. Used for every read response."""
+
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+    id: Annotated[str, BeforeValidator(lambda v: str(v)), Field(examples=["1"])]
+    full_name: Annotated[str, Field(min_length=2, max_length=30, examples=["User Userson"], validation_alias="name")]
+    username: Annotated[str, Field(min_length=2, max_length=20, pattern=r"^[a-z0-9]+$", examples=["userson"])]
+    email: Annotated[EmailStr, _EMAIL_FIELD]
+    profile_image_url: str
+    is_active: bool
+    is_superuser: bool
+
+
 class UserCreate(UserBase):
+    """Body for `POST /users` — superuser-only endpoint, so privilege flags live here."""
+
     model_config = ConfigDict(extra="ignore", populate_by_name=True)
 
     password: Annotated[str, Field(examples=["Str1ngst!"])]
-    confirm_password: str | None = Field(default=None, exclude=True)
     is_superuser: bool = False
     is_active: bool = True
 
@@ -90,74 +79,33 @@ class UserCreate(UserBase):
     def password_strength(cls, v: str) -> str:
         return validate_password_strength(v)
 
-    @model_validator(mode="after")
-    def verify_password_match(self) -> Self:
-        if self.confirm_password is not None and self.password != self.confirm_password:
-            raise ValueError("Passwords do not match")
-        return self
-
-
-class UserCreateInternal(UserBase):
-    hashed_password: str
-
 
 class UserUpdate(BaseModel):
+    """Body for `PATCH /users/me` — self-update only. Privilege flags and password are intentionally absent.
+
+    Privilege flags can only be changed via `UserAdminUpdate` on the admin endpoint.
+    Password changes go through `PATCH /users/me/password` so the current password is verified.
+    """
+
     model_config = ConfigDict(extra="ignore", populate_by_name=True)
 
-    name: Annotated[
-        str | None,
-        Field(
-            min_length=2,
-            max_length=30,
-            examples=["User Userberg"],
-            default=None,
-            validation_alias=AliasChoices("name", "full_name"),
-            serialization_alias="full_name",
-        ),
-    ]
-    username: Annotated[
-        str | None, Field(min_length=2, max_length=20, pattern=r"^[a-z0-9]+$", examples=["userberg"], default=None)
-    ]
+    name: Annotated[str | None, _NAME_FIELD]
+    username: Annotated[str | None, _USERNAME_FIELD]
     email: Annotated[EmailStr | None, Field(examples=["user.userberg@example.com"], default=None)]
-    profile_image_url: Annotated[
-        str | None,
-        Field(
-            pattern=r"^(https?|ftp)://[^\s/$.?#].[^\s]*$", examples=["https://www.profileimageurl.com"], default=None
-        ),
-    ]
+    profile_image_url: Annotated[str | None, _PROFILE_IMAGE_FIELD]
+
+
+class UserAdminUpdate(UserUpdate):
+    """Body for `PATCH /users/{user_id}` — superuser-only endpoint."""
+
     password: str | None = Field(default=None)
-    confirm_password: str | None = Field(default=None, exclude=True)
     is_active: bool | None = None
     is_superuser: bool | None = None
 
     @field_validator("password")
     @classmethod
     def password_strength(cls, v: str | None) -> str | None:
-        if v is not None:
-            return validate_password_strength(v)
-        return v
-
-    @model_validator(mode="after")
-    def verify_password_match(self) -> Self:
-        if self.password is not None and self.confirm_password is not None:
-            if self.password != self.confirm_password:
-                raise ValueError("Passwords do not match")
-        return self
-
-
-class UserUpdateInternal(UserUpdate):
-    updated_at: datetime
-
-
-class UserDelete(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    is_deleted: bool
-    deleted_at: datetime
-
-
-class UserRestoreDeleted(BaseModel):
-    is_deleted: bool
+        return validate_password_strength(v) if v is not None else v
 
 
 class UpdatePassword(BaseModel):

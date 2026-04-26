@@ -51,46 +51,47 @@ async def test_read_user_by_id(client: AsyncClient, normal_user_token_headers, d
 
 
 @pytest.mark.asyncio
-async def test_update_user(client: AsyncClient, normal_user_token_headers):
-    me = await client.get("/api/v1/users/me", headers=normal_user_token_headers)
-    user_id = me.json()["id"]
-
+async def test_update_user_self(client: AsyncClient, normal_user_token_headers):
     update_data = {"name": "Updated Name"}
-    response = await client.patch(f"/api/v1/users/{user_id}", json=update_data, headers=normal_user_token_headers)
+    response = await client.patch("/api/v1/users/me", json=update_data, headers=normal_user_token_headers)
     assert response.status_code == 200
-
-    # Verify update
-    me_after = await client.get("/api/v1/users/me", headers=normal_user_token_headers)
-    assert me_after.json()["full_name"] == "Updated Name"
+    assert response.json()["full_name"] == "Updated Name"
 
 
 @pytest.mark.asyncio
 async def test_normal_user_cannot_escalate_to_superuser_me(client: AsyncClient, normal_user_token_headers):
-    # Try to become superuser via /me
+    # `is_superuser` is not a field on UserUpdate, so Pydantic drops it via extra="ignore".
     update_data = {"is_superuser": True, "name": "Hackerman"}
     response = await client.patch("/api/v1/users/me", json=update_data, headers=normal_user_token_headers)
     assert response.status_code == 200
     content = response.json()
 
-    # Name should change, but is_superuser MUST remain False
     assert content["full_name"] == "Hackerman"
     assert content["is_superuser"] is False
 
 
 @pytest.mark.asyncio
-async def test_normal_user_cannot_escalate_to_superuser_id(client: AsyncClient, normal_user_token_headers):
+async def test_normal_user_cannot_use_admin_endpoint(client: AsyncClient, normal_user_token_headers):
     me = await client.get("/api/v1/users/me", headers=normal_user_token_headers)
     user_id = me.json()["id"]
 
-    # Try to become superuser via /{user_id}
+    # PATCH /users/{id} is now superuser-only — non-superusers must go through /users/me.
     update_data = {"is_superuser": True, "is_active": False}
     response = await client.patch(f"/api/v1/users/{user_id}", json=update_data, headers=normal_user_token_headers)
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_superuser_can_use_admin_endpoint(client: AsyncClient, superuser_token_headers, db):
+    from tests.helpers.generators import create_user
+
+    target = await create_user(db, email="target@example.com")
+    update_data = {"is_superuser": True, "name": "Promoted"}
+    response = await client.patch(f"/api/v1/users/{target.id}", json=update_data, headers=superuser_token_headers)
     assert response.status_code == 200
     content = response.json()
-
-    # Both fields should be ignored/remain unchanged
-    assert content["is_superuser"] is False
-    assert content["is_active"] is True
+    assert content["is_superuser"] is True
+    assert content["full_name"] == "Promoted"
 
 
 @pytest.mark.asyncio

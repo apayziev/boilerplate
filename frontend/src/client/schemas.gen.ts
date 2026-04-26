@@ -343,6 +343,102 @@ export const UpdatePasswordSchema = {
   title: "UpdatePassword",
 } as const
 
+export const UserAdminUpdateSchema = {
+  properties: {
+    name: {
+      anyOf: [
+        {
+          type: "string",
+          maxLength: 30,
+          minLength: 2,
+        },
+        {
+          type: "null",
+        },
+      ],
+      title: "Name",
+      examples: ["User Userson"],
+    },
+    username: {
+      anyOf: [
+        {
+          type: "string",
+          maxLength: 20,
+          minLength: 2,
+          pattern: "^[a-z0-9]+$",
+        },
+        {
+          type: "null",
+        },
+      ],
+      title: "Username",
+      examples: ["userson"],
+    },
+    email: {
+      anyOf: [
+        {
+          type: "string",
+          format: "email",
+        },
+        {
+          type: "null",
+        },
+      ],
+      title: "Email",
+      examples: ["user.userberg@example.com"],
+    },
+    profile_image_url: {
+      anyOf: [
+        {
+          type: "string",
+          pattern: "^(https?|ftp)://[^\\s/$.?#].[^\\s]*$",
+        },
+        {
+          type: "null",
+        },
+      ],
+      title: "Profile Image Url",
+      examples: ["https://www.profileimageurl.com"],
+    },
+    password: {
+      anyOf: [
+        {
+          type: "string",
+        },
+        {
+          type: "null",
+        },
+      ],
+      title: "Password",
+    },
+    is_active: {
+      anyOf: [
+        {
+          type: "boolean",
+        },
+        {
+          type: "null",
+        },
+      ],
+      title: "Is Active",
+    },
+    is_superuser: {
+      anyOf: [
+        {
+          type: "boolean",
+        },
+        {
+          type: "null",
+        },
+      ],
+      title: "Is Superuser",
+    },
+  },
+  type: "object",
+  title: "UserAdminUpdate",
+  description: "Body for `PATCH /users/{user_id}` — superuser-only endpoint.",
+} as const
+
 export const UserCreateSchema = {
   properties: {
     name: {
@@ -385,17 +481,6 @@ export const UserCreateSchema = {
       title: "Password",
       examples: ["Str1ngst!"],
     },
-    confirm_password: {
-      anyOf: [
-        {
-          type: "string",
-        },
-        {
-          type: "null",
-        },
-      ],
-      title: "Confirm Password",
-    },
     is_superuser: {
       type: "boolean",
       title: "Is Superuser",
@@ -410,6 +495,8 @@ export const UserCreateSchema = {
   type: "object",
   required: ["email", "password"],
   title: "UserCreate",
+  description:
+    "Body for `POST /users` — superuser-only endpoint, so privilege flags live here.",
 } as const
 
 export const UserReadSchema = {
@@ -464,6 +551,8 @@ export const UserReadSchema = {
     "is_superuser",
   ],
   title: "UserRead",
+  description:
+    "Public-facing user representation. Used for every read response.",
 } as const
 
 export const UserUpdateSchema = {
@@ -480,7 +569,7 @@ export const UserUpdateSchema = {
         },
       ],
       title: "Name",
-      examples: ["User Userberg"],
+      examples: ["User Userson"],
     },
     username: {
       anyOf: [
@@ -495,7 +584,7 @@ export const UserUpdateSchema = {
         },
       ],
       title: "Username",
-      examples: ["userberg"],
+      examples: ["userson"],
     },
     email: {
       anyOf: [
@@ -523,53 +612,13 @@ export const UserUpdateSchema = {
       title: "Profile Image Url",
       examples: ["https://www.profileimageurl.com"],
     },
-    password: {
-      anyOf: [
-        {
-          type: "string",
-        },
-        {
-          type: "null",
-        },
-      ],
-      title: "Password",
-    },
-    confirm_password: {
-      anyOf: [
-        {
-          type: "string",
-        },
-        {
-          type: "null",
-        },
-      ],
-      title: "Confirm Password",
-    },
-    is_active: {
-      anyOf: [
-        {
-          type: "boolean",
-        },
-        {
-          type: "null",
-        },
-      ],
-      title: "Is Active",
-    },
-    is_superuser: {
-      anyOf: [
-        {
-          type: "boolean",
-        },
-        {
-          type: "null",
-        },
-      ],
-      title: "Is Superuser",
-    },
   },
   type: "object",
   title: "UserUpdate",
+  description: `Body for \`PATCH /users/me\` — self-update only. Privilege flags and password are intentionally absent.
+
+Privilege flags can only be changed via \`UserAdminUpdate\` on the admin endpoint.
+Password changes go through \`PATCH /users/me/password\` so the current password is verified.`,
 } as const
 
 export const ValidationErrorSchema = {

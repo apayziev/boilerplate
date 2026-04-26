@@ -4,45 +4,45 @@ import type { CancelablePromise } from "./core/CancelablePromise"
 import { OpenAPI } from "./core/OpenAPI"
 import { request as __request } from "./core/request"
 import type {
-  HealthApiV1HealthGetResponse,
-  ReadyApiV1ReadyGetResponse,
-  ReadItemsData,
-  ReadItemsResponse,
   CreateItemData,
   CreateItemResponse,
-  ReadItemData,
-  ReadItemResponse,
-  UpdateItemData,
-  UpdateItemResponse,
-  DeleteItemData,
-  DeleteItemResponse,
-  LoginAccessTokenData,
-  LoginAccessTokenResponse,
-  RefreshAccessTokenResponse,
-  LogoutData,
-  LogoutResponse,
   CreateTaskApiV1TasksTaskPostData,
   CreateTaskApiV1TasksTaskPostResponse,
-  GetTaskApiV1TasksTaskTaskIdGetData,
-  GetTaskApiV1TasksTaskTaskIdGetResponse,
   CreateUserData,
   CreateUserResponse,
-  ReadUsersData,
-  ReadUsersResponse,
-  ReadUserMeResponse,
-  DeleteUserMeResponse,
-  UpdateUserMeData,
-  UpdateUserMeResponse,
-  UpdatePasswordMeData,
-  UpdatePasswordMeResponse,
-  ReadUserByIdData,
-  ReadUserByIdResponse,
-  UpdateUserData,
-  UpdateUserResponse,
-  DeleteUserData,
-  DeleteUserResponse,
   DeleteDbUserData,
   DeleteDbUserResponse,
+  DeleteItemData,
+  DeleteItemResponse,
+  DeleteUserData,
+  DeleteUserMeResponse,
+  DeleteUserResponse,
+  GetTaskApiV1TasksTaskTaskIdGetData,
+  GetTaskApiV1TasksTaskTaskIdGetResponse,
+  HealthApiV1HealthGetResponse,
+  LoginAccessTokenData,
+  LoginAccessTokenResponse,
+  LogoutData,
+  LogoutResponse,
+  ReadItemData,
+  ReadItemResponse,
+  ReadItemsData,
+  ReadItemsResponse,
+  ReadUserByIdData,
+  ReadUserByIdResponse,
+  ReadUserMeResponse,
+  ReadUsersData,
+  ReadUsersResponse,
+  ReadyApiV1ReadyGetResponse,
+  RefreshAccessTokenResponse,
+  UpdateItemData,
+  UpdateItemResponse,
+  UpdatePasswordMeData,
+  UpdatePasswordMeResponse,
+  UpdateUserData,
+  UpdateUserMeData,
+  UpdateUserMeResponse,
+  UpdateUserResponse,
 } from "./types.gen"
 
 export class HealthService {
@@ -230,7 +230,7 @@ export class LoginService {
 
   /**
    * Logout
-   * Logout user and invalidate all outstanding tokens.
+   * Log the user out by bumping `token_version`, which invalidates every outstanding access/refresh token.
    * @param data The data for the request.
    * @param data.refreshToken
    * @returns string Successful Response
@@ -303,7 +303,7 @@ export class TasksService {
 export class UsersService {
   /**
    * Write User
-   * Create a new user with generated username if missing (Superuser only).
+   * Create a new user (superuser only). If `username` is omitted, derive one from the email local-part.
    * @param data The data for the request.
    * @param data.requestBody
    * @returns UserRead Successful Response
@@ -325,7 +325,7 @@ export class UsersService {
 
   /**
    * Read Users
-   * Retrieve users with pagination.
+   * List users with pagination.
    * @param data The data for the request.
    * @param data.skip
    * @param data.limit
@@ -350,7 +350,6 @@ export class UsersService {
 
   /**
    * Read Users Me
-   * Get current user information.
    * @returns UserRead Successful Response
    * @throws ApiError
    */
@@ -363,7 +362,6 @@ export class UsersService {
 
   /**
    * Delete User Me
-   * Delete own user account.
    * @returns string Successful Response
    * @throws ApiError
    */
@@ -376,7 +374,7 @@ export class UsersService {
 
   /**
    * Update User Me
-   * Update current user profile.
+   * Update the caller's own profile. Privilege flags are not in the schema, so escalation is impossible here.
    * @param data The data for the request.
    * @param data.requestBody
    * @returns UserRead Successful Response
@@ -398,7 +396,6 @@ export class UsersService {
 
   /**
    * Update Password Me
-   * Update current user password.
    * @param data The data for the request.
    * @param data.requestBody
    * @returns string Successful Response
@@ -420,7 +417,6 @@ export class UsersService {
 
   /**
    * Read User By Id
-   * Get a specific user by ID.
    * @param data The data for the request.
    * @param data.userId
    * @returns UserRead Successful Response
@@ -443,7 +439,7 @@ export class UsersService {
 
   /**
    * Patch User
-   * Update a specific user profile (Self or Superuser).
+   * Update any user (superuser only). Self-updates should go through `PATCH /users/me`.
    * @param data The data for the request.
    * @param data.userId
    * @param data.requestBody
@@ -469,7 +465,7 @@ export class UsersService {
 
   /**
    * Erase User
-   * Delete a user profile (Self or Superuser).
+   * Soft-delete a user. Allowed for the user themselves or any superuser.
    * @param data The data for the request.
    * @param data.userId
    * @returns string Successful Response
@@ -492,7 +488,7 @@ export class UsersService {
 
   /**
    * Erase Db User
-   * Permanently delete a user from the database (Superuser only).
+   * Hard-delete a user (superuser only).
    * @param data The data for the request.
    * @param data.username
    * @returns string Successful Response

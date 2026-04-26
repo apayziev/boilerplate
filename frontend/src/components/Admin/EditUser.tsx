@@ -5,7 +5,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { type UserRead, UsersService } from "@/client"
+import { type UserAdminUpdate, type UserRead, UsersService } from "@/client"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -74,8 +74,11 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
   })
 
   const mutation = useMutation({
-    mutationFn: (data: FormData) =>
-      UsersService.updateUser({ userId: Number.parseInt(user.id), requestBody: data }),
+    mutationFn: (requestBody: UserAdminUpdate) =>
+      UsersService.updateUser({
+        userId: Number.parseInt(user.id, 10),
+        requestBody,
+      }),
     onSuccess: () => {
       showSuccessToast("User updated successfully")
       setIsOpen(false)
@@ -88,12 +91,16 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
   })
 
   const onSubmit = (data: FormData) => {
-    // exclude confirm_password from submission data and remove password if empty
-    const { confirm_password: _, ...submitData } = data
-    if (!submitData.password) {
-      delete submitData.password
+    const payload: UserAdminUpdate = {
+      email: data.email,
+      name: data.full_name,
+      is_superuser: data.is_superuser,
+      is_active: data.is_active,
     }
-    mutation.mutate(submitData)
+    if (data.password) {
+      payload.password = data.password
+    }
+    mutation.mutate(payload)
   }
 
   return (
