@@ -15,3 +15,17 @@ async def test_ready_check(client: AsyncClient):
     assert response.status_code == 200
     data = response.json()
     assert data["database"] == "healthy"
+    assert data["redis"] == "healthy"
+
+
+@pytest.mark.asyncio
+async def test_request_id_header_present(client: AsyncClient):
+    response = await client.get("/api/v1/health")
+    assert "X-Request-ID" in response.headers
+    assert len(response.headers["X-Request-ID"]) > 0
+
+
+@pytest.mark.asyncio
+async def test_request_id_echoed_when_caller_provides_one(client: AsyncClient):
+    response = await client.get("/api/v1/health", headers={"X-Request-ID": "trace-abc-123"})
+    assert response.headers["X-Request-ID"] == "trace-abc-123"

@@ -4,51 +4,51 @@ import type { CancelablePromise } from "./core/CancelablePromise"
 import { OpenAPI } from "./core/OpenAPI"
 import { request as __request } from "./core/request"
 import type {
-  CreateItemData,
-  CreateItemResponse,
-  CreateTaskApiV1TasksTaskPostData,
-  CreateTaskApiV1TasksTaskPostResponse,
-  CreateUserData,
-  CreateUserResponse,
-  DeleteDbUserData,
-  DeleteDbUserResponse,
-  DeleteItemData,
-  DeleteItemResponse,
-  DeleteUserData,
-  DeleteUserMeResponse,
-  DeleteUserResponse,
-  GetTaskApiV1TasksTaskTaskIdGetData,
-  GetTaskApiV1TasksTaskTaskIdGetResponse,
   HealthApiV1HealthGetResponse,
-  LoginAccessTokenData,
-  LoginAccessTokenResponse,
-  LogoutData,
-  LogoutResponse,
-  ReadItemData,
-  ReadItemResponse,
+  ReadyApiV1ReadyGetResponse,
   ReadItemsData,
   ReadItemsResponse,
-  ReadUserByIdData,
-  ReadUserByIdResponse,
-  ReadUserMeResponse,
-  ReadUsersData,
-  ReadUsersResponse,
-  ReadyApiV1ReadyGetResponse,
-  RefreshAccessTokenResponse,
+  CreateItemData,
+  CreateItemResponse,
+  ReadItemData,
+  ReadItemResponse,
   UpdateItemData,
   UpdateItemResponse,
-  UpdatePasswordMeData,
-  UpdatePasswordMeResponse,
-  UpdateUserData,
+  DeleteItemData,
+  DeleteItemResponse,
+  LoginAccessTokenData,
+  LoginAccessTokenResponse,
+  RefreshAccessTokenResponse,
+  LogoutData,
+  LogoutResponse,
+  CreateTaskApiV1TasksTaskPostData,
+  CreateTaskApiV1TasksTaskPostResponse,
+  GetTaskApiV1TasksTaskTaskIdGetData,
+  GetTaskApiV1TasksTaskTaskIdGetResponse,
+  CreateUserData,
+  CreateUserResponse,
+  ReadUsersData,
+  ReadUsersResponse,
+  ReadUserMeResponse,
+  DeleteUserMeResponse,
   UpdateUserMeData,
   UpdateUserMeResponse,
+  UpdatePasswordMeData,
+  UpdatePasswordMeResponse,
+  ReadUserByIdData,
+  ReadUserByIdResponse,
+  UpdateUserData,
   UpdateUserResponse,
+  DeleteUserData,
+  DeleteUserResponse,
+  DeleteDbUserData,
+  DeleteDbUserResponse,
 } from "./types.gen"
 
 export class HealthService {
   /**
    * Health
-   * Basic health check to verify the application is up.
+   * Liveness probe — confirm the process is up and the event loop is responsive.
    * @returns HealthCheck Successful Response
    * @throws ApiError
    */
@@ -61,7 +61,7 @@ export class HealthService {
 
   /**
    * Ready
-   * Readiness check to verify external dependencies (DB) are available.
+   * Readiness probe — verify the app can serve traffic by pinging every external dependency it relies on.
    * @returns ReadyCheck Successful Response
    * @throws ApiError
    */
@@ -76,7 +76,7 @@ export class HealthService {
 export class ItemsService {
   /**
    * Read Items
-   * Retrieve items.
+   * List items. Superusers see all; everyone else sees only their own.
    * @param data The data for the request.
    * @param data.skip
    * @param data.limit
@@ -101,7 +101,6 @@ export class ItemsService {
 
   /**
    * Create Item
-   * Create new item.
    * @param data The data for the request.
    * @param data.requestBody
    * @returns ItemPublic Successful Response
@@ -123,7 +122,6 @@ export class ItemsService {
 
   /**
    * Read Item
-   * Get item by ID.
    * @param data The data for the request.
    * @param data.id
    * @returns ItemPublic Successful Response
@@ -146,7 +144,6 @@ export class ItemsService {
 
   /**
    * Update Item
-   * Update an item.
    * @param data The data for the request.
    * @param data.id
    * @param data.requestBody
@@ -172,7 +169,6 @@ export class ItemsService {
 
   /**
    * Delete Item
-   * Delete an item.
    * @param data The data for the request.
    * @param data.id
    * @returns Message Successful Response
