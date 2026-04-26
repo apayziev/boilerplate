@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Query, status
 
 from app.api.deps import CurrentUser, SessionDep
+from app.core.config import settings
 from app.core.exceptions import ForbiddenException, NotFoundException
 from app.crud.items import crud_items
 from app.models.item import Item
@@ -25,7 +26,7 @@ async def read_items(
     session: SessionDep,
     current_user: CurrentUser,
     skip: int = Query(default=0, ge=0),
-    limit: int = Query(default=50, ge=1, le=100),
+    limit: int = Query(default=settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE),
 ) -> ItemsPublic:
     """List items. Superusers see all; everyone else sees only their own."""
     filters: dict = {} if current_user.is_superuser else {"owner_id": current_user.id}

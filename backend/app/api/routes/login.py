@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.db import async_get_db
 from app.core.exceptions import UnauthorizedException
 from app.core.security import (
@@ -23,8 +24,10 @@ from app.schemas.auth import Token
 
 router = APIRouter(prefix="/login", tags=["login"])
 
-# Brute-force defence: 5 attempts per IP per 5-minute window.
-_LOGIN_RATE_LIMIT = RateLimit(limit=5, period=300)
+# Brute-force defence — tunable via LOGIN_RATE_LIMIT_ATTEMPTS / LOGIN_RATE_LIMIT_PERIOD.
+_LOGIN_RATE_LIMIT = RateLimit(
+    limit=settings.LOGIN_RATE_LIMIT_ATTEMPTS, period=settings.LOGIN_RATE_LIMIT_PERIOD
+)
 
 ACCESS_MAX_AGE = ACCESS_TOKEN_EXPIRE_MINUTES * 60
 REFRESH_MAX_AGE = REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
