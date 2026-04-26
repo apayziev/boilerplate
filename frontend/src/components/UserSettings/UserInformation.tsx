@@ -64,15 +64,12 @@ const UserInformation = () => {
 
   const onSubmit = (data: FormData) => {
     const updateData: UserUpdate = {}
-
-    // only include fields that have changed
     if (data.name !== currentUser?.name) {
       updateData.name = data.name
     }
     if (data.phone !== currentUser?.phone) {
       updateData.phone = data.phone
     }
-
     mutation.mutate(updateData)
   }
 

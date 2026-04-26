@@ -36,7 +36,6 @@ async def create_first_user(session: AsyncSession) -> None:
             await session.commit()
             logger.info("Admin user %s created successfully.", username)
         else:
-            # Refresh password from environment if it changed
             if not await verify_password(settings.ADMIN_PASSWORD, user.hashed_password):
                 user.hashed_password = hashed_password
                 session.add(user)

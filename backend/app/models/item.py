@@ -15,6 +15,4 @@ class Item(BaseModel):
     title: Mapped[str] = mapped_column(String(255), nullable=False, kw_only=True)
     description: Mapped[str | None] = mapped_column(String(255), nullable=True, default=None, kw_only=True)
     owner_id: Mapped[int] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"), nullable=False, kw_only=True)
-
-    # Relationship
     owner: Mapped["User"] = relationship("User", back_populates="items", init=False)  # type: ignore
