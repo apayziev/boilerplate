@@ -17,7 +17,6 @@ from sqlalchemy import text
 from app.api.deps import get_current_superuser
 from app.core.middleware import RequestLoggingMiddleware
 from app.core.utils.rate_limit import rate_limiter
-from app.models import *  # noqa: F403
 
 from .config import (
     AppSettings,
@@ -157,33 +156,19 @@ def lifespan_factory(
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator:
-        from asyncio import Event
-
-        initialization_complete = Event()
-        app.state.initialization_complete = initialization_complete
-
         await set_threadpool_tokens()
 
         try:
             if isinstance(settings, RedisSettings):
-                any_redis_enabled = any(
-                    [
-                        settings.ENABLE_REDIS_QUEUE,
-                        settings.ENABLE_REDIS_RATE_LIMIT,
-                    ]
-                )
-                if any_redis_enabled:
-                    if settings.ENABLE_REDIS_QUEUE:
-                        await create_redis_queue_pool()
-                    if settings.ENABLE_REDIS_RATE_LIMIT:
-                        await create_redis_rate_limit_pool()
-
+                if settings.ENABLE_REDIS_QUEUE:
+                    await create_redis_queue_pool()
+                if settings.ENABLE_REDIS_RATE_LIMIT:
+                    await create_redis_rate_limit_pool()
+                if settings.ENABLE_REDIS_QUEUE or settings.ENABLE_REDIS_RATE_LIMIT:
                     await check_redis_connection()
 
             if isinstance(settings, DatabaseSettings):
                 await check_database_connection()
-
-            initialization_complete.set()
 
             yield
 
