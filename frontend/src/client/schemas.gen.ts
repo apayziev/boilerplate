@@ -511,11 +511,18 @@ export const UserReadSchema = {
       title: "Id",
       examples: ["1"],
     },
-    full_name: {
-      type: "string",
-      maxLength: 30,
-      minLength: 2,
-      title: "Full Name",
+    name: {
+      anyOf: [
+        {
+          type: "string",
+          maxLength: 30,
+          minLength: 2,
+        },
+        {
+          type: "null",
+        },
+      ],
+      title: "Name",
       examples: ["User Userson"],
     },
     username: {
@@ -548,7 +555,6 @@ export const UserReadSchema = {
   type: "object",
   required: [
     "id",
-    "full_name",
     "username",
     "email",
     "profile_image_url",
@@ -620,7 +626,7 @@ export const UserUpdateSchema = {
   },
   type: "object",
   title: "UserUpdate",
-  description: `Body for \`PATCH /users/me\` — self-update only. Privilege flags and password are intentionally absent.
+  description: `Body for \`PATCH /users/me\` — self-update only.
 
 Privilege flags can only be changed via \`UserAdminUpdate\` on the admin endpoint.
 Password changes go through \`PATCH /users/me/password\` so the current password is verified.`,

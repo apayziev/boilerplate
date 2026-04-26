@@ -18,7 +18,7 @@ async def test_create_user(client: AsyncClient, superuser_token_headers):
     content = response.json()
     assert content["email"] == data["email"]
     assert "id" in content
-    assert content["full_name"] == data["name"]
+    assert content["name"] == data["name"]
 
 
 @pytest.mark.asyncio
@@ -55,7 +55,7 @@ async def test_update_user_self(client: AsyncClient, normal_user_token_headers):
     update_data = {"name": "Updated Name"}
     response = await client.patch("/api/v1/users/me", json=update_data, headers=normal_user_token_headers)
     assert response.status_code == 200
-    assert response.json()["full_name"] == "Updated Name"
+    assert response.json()["name"] == "Updated Name"
 
 
 @pytest.mark.asyncio
@@ -66,7 +66,7 @@ async def test_normal_user_cannot_escalate_to_superuser_me(client: AsyncClient, 
     assert response.status_code == 200
     content = response.json()
 
-    assert content["full_name"] == "Hackerman"
+    assert content["name"] == "Hackerman"
     assert content["is_superuser"] is False
 
 
@@ -91,7 +91,7 @@ async def test_superuser_can_use_admin_endpoint(client: AsyncClient, superuser_t
     assert response.status_code == 200
     content = response.json()
     assert content["is_superuser"] is True
-    assert content["full_name"] == "Promoted"
+    assert content["name"] == "Promoted"
 
 
 @pytest.mark.asyncio

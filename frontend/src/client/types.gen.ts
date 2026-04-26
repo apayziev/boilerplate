@@ -110,7 +110,7 @@ export type UserCreate = {
  */
 export type UserRead = {
   id: string
-  full_name: string
+  name?: string | null
   username: string
   email: string
   profile_image_url: string
@@ -119,7 +119,7 @@ export type UserRead = {
 }
 
 /**
- * Body for `PATCH /users/me` — self-update only. Privilege flags and password are intentionally absent.
+ * Body for `PATCH /users/me` — self-update only.
  *
  * Privilege flags can only be changed via `UserAdminUpdate` on the admin endpoint.
  * Password changes go through `PATCH /users/me/password` so the current password is verified.

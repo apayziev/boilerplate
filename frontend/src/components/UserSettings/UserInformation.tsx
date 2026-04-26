@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
 
 const formSchema = z.object({
-  full_name: z.string().max(30).optional(),
+  name: z.string().max(30).optional(),
   email: z.email({ message: "Invalid email address" }),
 })
 
@@ -39,7 +39,7 @@ const UserInformation = () => {
     mode: "onBlur",
     criteriaMode: "all",
     defaultValues: {
-      full_name: currentUser?.full_name ?? undefined,
+      name: currentUser?.name ?? undefined,
       email: currentUser?.email,
     },
   })
@@ -65,8 +65,8 @@ const UserInformation = () => {
     const updateData: UserUpdate = {}
 
     // only include fields that have changed
-    if (data.full_name !== currentUser?.full_name) {
-      updateData.name = data.full_name
+    if (data.name !== currentUser?.name) {
+      updateData.name = data.name
     }
     if (data.email !== currentUser?.email) {
       updateData.email = data.email
@@ -90,7 +90,7 @@ const UserInformation = () => {
         >
           <FormField
             control={form.control}
-            name="full_name"
+            name="name"
             render={({ field }) =>
               editMode ? (
                 <FormItem>
